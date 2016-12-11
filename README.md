@@ -59,7 +59,7 @@ $ cd range-v3
 $ git checkout FIXME
 ```
 
-## Building and installing [Text_view] for [range-v3]
+## Building and installing [Text_view for range-v3][Text_view-range-v3]
 [Text_view for range-v3][Text_view-range-v3] is currently a header-only
 library, so no build or installation is currently required to use it.  It is
 unlikely that [Text_view for range-v3][Text_view-range-v3] will remain a
