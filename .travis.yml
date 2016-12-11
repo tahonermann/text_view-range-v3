@@ -18,7 +18,7 @@ matrix:
   include:
     - os: linux
       compiler: gcc
-      env: COMPILER=g++-6 BUILD_TYPE=RELEASE BUILD_LAST_KNOWN_GOOD_CMCSTL2=1
+      env: COMPILER=g++-6 BUILD_TYPE=RELEASE BUILD_LAST_KNOWN_GOOD_RANGE_V3=1
     - os: linux
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=RELEASE
@@ -39,15 +39,15 @@ install:
     fi
   - export PATH="$TRAVIS_BUILD_DIR/cache/cmake/bin:$PATH"
   - |
-    if [ "!" -f cache/last_known_good_cmcstl2_commit ]; then
-      echo "b704dadecd0ae2fc11289e35b37d234d9c8eb644" > cache/last_known_good_cmcstl2_commit
+    if [ "!" -f cache/last_known_good_range_v3_commit ]; then
+      echo "FIXME" > cache/last_known_good_range_v3_commit
     fi
-  - travis_retry git clone https://github.com/CaseyCarter/cmcstl2.git cmcstl2
+  - travis_retry git clone https://github.com/ericniebler/range-v3.git range-v3
   - |
-    if [ -n "$BUILD_LAST_KNOWN_GOOD_CMCSTL2" ]; then
-      git -C cmcstl2 checkout $(cat cache/last_known_good_cmcstl2_commit)
+    if [ -n "$BUILD_LAST_KNOWN_GOOD_RANGE_V3" ]; then
+      git -C range-v3 checkout $(cat cache/last_known_good_range_v3_commit)
     fi
-  - export CMCSTL2_INSTALL_PATH="$TRAVIS_BUILD_DIR/cmcstl2"
+  - export RANGE_V3_INSTALL_PATH="$TRAVIS_BUILD_DIR/range-v3"
 
 before_script:
   - uname -a
@@ -56,7 +56,7 @@ before_script:
   - export CXX="$COMPILER"
   - which "$CXX"
   - $CXX --version
-  - "echo \"cmcstl2 commit: $(git -C cmcstl2 rev-parse HEAD)\""
+  - "echo \"range-v3 commit: $(git -C range-v3 rev-parse HEAD)\""
 
 script:
   - mkdir build
@@ -65,6 +65,6 @@ script:
 
 after_success:
   - |
-    if [ -z "$BUILD_LAST_KNOWN_GOOD_CMCSTL2" ]; then
-      git -C cmcstl2 rev-parse HEAD > cache/last_known_good_cmcstl2_commit
+    if [ -z "$BUILD_LAST_KNOWN_GOOD_RANGE_V3" ]; then
+      git -C range-v3 rev-parse HEAD > cache/last_known_good_range_v3_commit
     fi
