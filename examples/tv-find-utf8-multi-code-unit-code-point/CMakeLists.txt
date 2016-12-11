@@ -6,22 +6,22 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(tv-find-utf8-multi-code-unit-code-point CXX)
+project(tv-range-v3-find-utf8-multi-code-unit-code-point CXX)
 
-find_package(text_view REQUIRED)
+find_package(text_view_range_v3 REQUIRED)
 
 add_executable(
   tv-find-utf8-multi-code-unit-code-point
   tv-find-utf8-multi-code-unit-code-point.cpp)
 target_compile_options(
   tv-find-utf8-multi-code-unit-code-point
-  PRIVATE ${text_view_COMPILE_OPTIONS})
+  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
 target_compile_definitions(
   tv-find-utf8-multi-code-unit-code-point
-  PRIVATE ${text_view_DEFINITIONS})
+  PRIVATE ${text_view_range_v3_DEFINITIONS})
 target_include_directories(
   tv-find-utf8-multi-code-unit-code-point
-  PRIVATE ${text_view_INCLUDE_DIRS})
+  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
 
 include(CTest)
 add_test(

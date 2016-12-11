@@ -1,0 +1,34 @@
+# Copyright (c) 2016, Tom Honermann
+#
+# This file is distributed under the MIT License. See the accompanying file
+# LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
+# and conditions.
+
+cmake_minimum_required(VERSION 3.0.2)
+
+@PACKAGE_INIT@
+
+set(CMAKE_MODULE_PATH
+      ${CMAKE_MODULE_PATH}
+      ${CMAKE_CURRENT_LIST_DIR}/modules/)
+
+# Locate dependencies.  Prefer config mode, but fall back to module mode if
+# a package isn't found.
+find_package(Range-v3 QUIET NO_MODULE)
+if(NOT Range-v3_FOUND)
+  find_package(Range-v3 MODULE REQUIRED)
+endif()
+
+# FIXME: Use of the CMake compiler features support would be more appropriate
+# FIXME: here.
+set(text_view_range_v3_COMPILE_OPTIONS
+      -std=c++11
+      ${RANGE_V3_COMPILE_OPTIONS})
+
+set(text_view_range_v3_DEFINITIONS
+      ${RANGE_V3_DEFINITIONS})
+
+set(text_view_range_v3_INCLUDE_DIRS
+      ${RANGE_V3_INCLUDE_DIRS}
+      ${PACKAGE_PREFIX_DIR}/include
+      CACHE FILE "Text_view-range-v3 include dirs")

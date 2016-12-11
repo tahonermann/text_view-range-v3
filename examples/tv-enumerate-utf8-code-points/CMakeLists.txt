@@ -6,22 +6,22 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(tv-enumerate-utf8-code-points CXX)
+project(tv-range-v3-enumerate-utf8-code-points CXX)
 
-find_package(text_view REQUIRED)
+find_package(text_view_range_v3 REQUIRED)
 
 add_executable(
   tv-enumerate-utf8-code-points
   tv-enumerate-utf8-code-points.cpp)
 target_compile_options(
   tv-enumerate-utf8-code-points
-  PRIVATE ${text_view_COMPILE_OPTIONS})
+  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
 target_compile_definitions(
   tv-enumerate-utf8-code-points
-  PRIVATE ${text_view_DEFINITIONS})
+  PRIVATE ${text_view_range_v3_DEFINITIONS})
 target_include_directories(
   tv-enumerate-utf8-code-points
-  PRIVATE ${text_view_INCLUDE_DIRS})
+  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
 
 include(CTest)
 add_test(

@@ -6,22 +6,22 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(test-text-view CXX)
+project(test-text-view-range-v3 CXX)
 
-find_package(text_view REQUIRED)
+find_package(text_view_range_v3 REQUIRED)
 
 add_executable(
   test-text-view
   test-text_view.cpp)
 target_compile_options(
   test-text-view
-  PRIVATE ${text_view_COMPILE_OPTIONS})
+  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
 target_compile_definitions(
   test-text-view
-  PRIVATE ${text_view_DEFINITIONS})
+  PRIVATE ${text_view_range_v3_DEFINITIONS})
 target_include_directories(
   test-text-view
-  PRIVATE ${text_view_INCLUDE_DIRS})
+  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
 
 include(CTest)
 add_test(

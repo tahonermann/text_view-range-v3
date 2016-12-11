@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(text_view_examples CXX)
+project(text_view-range-v3-examples CXX)
 
 include(CTest)
 

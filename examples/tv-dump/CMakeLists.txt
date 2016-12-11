@@ -6,19 +6,19 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(tv-dump CXX)
+project(tv-range-v3-dump CXX)
 
-find_package(text_view REQUIRED)
+find_package(text_view_range_v3 REQUIRED)
 
 add_executable(
   tv-dump
   tv-dump.cpp)
 target_compile_options(
   tv-dump
-  PRIVATE ${text_view_COMPILE_OPTIONS})
+  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
 target_compile_definitions(
   tv-dump
-  PRIVATE ${text_view_DEFINITIONS})
+  PRIVATE ${text_view_range_v3_DEFINITIONS})
 target_include_directories(
   tv-dump
-  PRIVATE ${text_view_INCLUDE_DIRS})
+  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})

@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(text_view CXX)
+project(text_view-range-v3 CXX)
 
 # Enable testing.
 include(CTest)
@@ -21,13 +21,13 @@ add_subdirectory(examples)
 
 # Determine the platform specific installation file layout.
 if(UNIX)
-  set(TEXT_VIEW_DESTINATION_INCLUDE include)
-  set(TEXT_VIEW_DESTINATION_SHARE share/text_view)
-  set(TEXT_VIEW_DESTINATION_CMAKE share/text_view/cmake)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_INCLUDE include)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_SHARE share/text_view)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE share/text_view/cmake)
 elseif(WIN32)
-  set(TEXT_VIEW_DESTINATION_INCLUDE text_view/include)
-  set(TEXT_VIEW_DESTINATION_SHARE text_view)
-  set(TEXT_VIEW_DESTINATION_CMAKE text_view/cmake)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_INCLUDE text_view/include)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_SHARE text_view)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE text_view/cmake)
 else()
   message(FATAL_ERROR "Unsupported operating system: ${CMAKE_SYSTEM_NAME}")
 endif()
@@ -55,40 +55,40 @@ add_custom_target(
           --build ${CMAKE_BINARY_DIR}
           --target install -- DESTDIR=${CMAKE_BINARY_DIR}/install
   COMMAND ${CMAKE_COMMAND}
-          -B${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_DESTINATION_SHARE}/examples/build
-          -H${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_DESTINATION_SHARE}/examples
+          -B${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE}/examples/build
+          -H${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE}/examples
           -DCMAKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}
   COMMAND ${CMAKE_COMMAND} --build
-          ${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_DESTINATION_SHARE}/examples/build
+          ${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE}/examples/build
           --target all
   COMMAND ${CMAKE_COMMAND}
-          -E chdir ${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_DESTINATION_SHARE}/examples/build
+          -E chdir ${CMAKE_BINARY_DIR}/install/${CMAKE_INSTALL_PREFIX}/${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE}/examples/build
           ${CMAKE_CTEST_COMMAND})
 
 # Package configuration module generation commands.
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  cmake/text_view-config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/cmake/text_view-config.cmake
-  INSTALL_DESTINATION ${TEXT_VIEW_DESTINATION_CMAKE})
+  cmake/text_view_range_v3-config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/text_view_range_v3-config.cmake
+  INSTALL_DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE})
 
 # Install commands.
 install(
   FILES LICENSE.txt README.md
-  DESTINATION ${TEXT_VIEW_DESTINATION_SHARE})
+  DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE})
 install(
   DIRECTORY include/
-  DESTINATION ${TEXT_VIEW_DESTINATION_INCLUDE}
+  DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_INCLUDE}
   COMPONENT development)
 install(
   DIRECTORY examples/
-  DESTINATION ${TEXT_VIEW_DESTINATION_SHARE}/examples
+  DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_SHARE}/examples
   COMPONENT examples)
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/text_view-config.cmake
-  DESTINATION ${TEXT_VIEW_DESTINATION_CMAKE}
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/text_view_range_v3-config.cmake
+  DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE}
   COMPONENT development)
 install(
-  FILES cmake/modules/FindCMCSTL2.cmake
-  DESTINATION ${TEXT_VIEW_DESTINATION_CMAKE}/modules
+  FILES cmake/modules/FindRange-v3.cmake
+  DESTINATION ${TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE}/modules
   COMPONENT development)
