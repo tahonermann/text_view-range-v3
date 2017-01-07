@@ -47,7 +47,7 @@ int main() {
     // the underlying code unit type of UTF-8 string literals is 'char' and
     // 'char' may be a signed 8-bit type that is unable to represent the full
     // unsigned range of UTF-8 code unit values.
-    assert(*(ti.base_range().begin()+0) == u8'\xC3');
-    assert(*(ti.base_range().begin()+1) == u8'\xB8');
+    assert(*(ti.base_range().begin()+0) == u8"\xC3"[0]);
+    assert(*(ti.base_range().begin()+1) == u8"\xB8"[0]);
     assert((ti.base_range().begin()+2) == ti.base_range().end());
 }

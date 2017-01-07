@@ -1697,25 +1697,25 @@ void test_u8text_view() {
     using CUMS = code_unit_map_sequence<ET>;
 
     CUMS code_unit_maps_with_terminator{
-        { {}, { CT{U't'} },  { u8't'  } },
-        { {}, { CT{U'e'} },  { u8'e'  } },
-        { {}, { CT{U'x'} },  { u8'x'  } },
-        { {}, { CT{U't'} },  { u8't'  } },
-        { {}, { CT{U'\0'} }, { u8'\0' } } };
+        { {}, { CT{U't'} },  { u8"t"[0]  } },
+        { {}, { CT{U'e'} },  { u8"e"[0]  } },
+        { {}, { CT{U'x'} },  { u8"x"[0]  } },
+        { {}, { CT{U't'} },  { u8"t"[0]  } },
+        { {}, { CT{U'\0'} }, { u8"\0"[0] } } };
     CUMS code_unit_maps_without_terminator{
-        { {}, { CT{U't'} },  { u8't'  } },
-        { {}, { CT{U'e'} },  { u8'e'  } },
-        { {}, { CT{U'x'} },  { u8'x'  } },
-        { {}, { CT{U't'} },  { u8't'  } } };
+        { {}, { CT{U't'} },  { u8"t"[0]  } },
+        { {}, { CT{U'e'} },  { u8"e"[0]  } },
+        { {}, { CT{U'x'} },  { u8"x"[0]  } },
+        { {}, { CT{U't'} },  { u8"t"[0]  } } };
 
     // Underlying code unit containers.
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
     static const char cstr[] = u8"text";
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static const array<char, 4> ary{ u8't', u8'e', u8'x', u8't' };
+    static const array<char, 4> ary{ u8"t"[0], u8"e"[0], u8"x"[0], u8"t"[0] };
     static const string str{u8"text"};
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static const auto il = { u8't', u8'e', u8'x', u8't' }; // std::initializer_list<char>.
+    static const auto il = { u8"t"[0], u8"e"[0], u8"x"[0], u8"t"[0] }; // std::initializer_list<char>.
 
     test_construct_text_view<TVT>(
         code_unit_maps_with_terminator,
