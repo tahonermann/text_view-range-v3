@@ -77,7 +77,7 @@ public:
     static constexpr int min_code_units = 1;
     static constexpr int max_code_units = 4;
 
-    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8);
+    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8, "");
 
     template<CodeUnitOutputIterator<std::make_unsigned_t<code_unit_type>> CUIT>
     static void encode_state_transition(
@@ -129,7 +129,7 @@ public:
 
         using utf8_codec = utf8_codec<CT, CUT>;
         using utf8_state_type = typename utf8_codec::state_type;
-        static_assert(std::is_empty<utf8_state_type>::value);
+        static_assert(std::is_empty<utf8_state_type>::value, "");
 
         utf8_state_type utf8_state;
         int utf8_encoded_code_units = 0;
@@ -159,7 +159,7 @@ public:
 
         using utf8_codec = utf8_codec<CT, CUT>;
         using utf8_state_type = typename utf8_codec::state_type;
-        static_assert(std::is_empty<utf8_state_type>::value);
+        static_assert(std::is_empty<utf8_state_type>::value, "");
 
         utf8_state_type utf8_state;
         int utf8_decoded_code_units = 0;
@@ -204,7 +204,7 @@ public:
 
         using utf8_codec = utf8_codec<CT, CUT>;
         using utf8_state_type = typename utf8_codec::state_type;
-        static_assert(std::is_empty<utf8_state_type>::value);
+        static_assert(std::is_empty<utf8_state_type>::value, "");
 
         utf8_state_type utf8_state;
         int utf8_decoded_code_units = 0;

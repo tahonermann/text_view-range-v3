@@ -21,11 +21,11 @@ struct with_non_empty : subobject<non_empty_class> { int i; };
 
 struct with_empty : subobject<empty_class> { int i; };
 // Embedding an empty class should use the empty base class optimization.
-static_assert(sizeof(with_empty) == sizeof(int));
+static_assert(sizeof(with_empty) == sizeof(int), "");
 
 struct with_final_empty : subobject<empty_final_class> { int i; };
 // Embedding a final empty class cannot use the empty base class optimization.
-static_assert(sizeof(with_final_empty) != sizeof(int));
+static_assert(sizeof(with_final_empty) != sizeof(int), "");
 
 struct with_int : subobject<int> { int i; };
 

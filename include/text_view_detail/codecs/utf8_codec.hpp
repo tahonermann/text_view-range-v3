@@ -31,7 +31,7 @@ public:
     static constexpr int min_code_units = 1;
     static constexpr int max_code_units = 4;
 
-    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8);
+    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8, "");
 
     template<CodeUnitOutputIterator<std::make_unsigned_t<code_unit_type>> CUIT>
     static void encode_state_transition(
