@@ -8,7 +8,10 @@
 #define TEXT_VIEW_ARCHETYPES_HPP
 
 
-#include <experimental/ranges/concepts>
+#include <range/v3/range_traits.hpp>
+#include <range/v3/utility/concepts.hpp>
+#include <range/v3/utility/iterator_concepts.hpp>
+#include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/concepts.hpp>
 
 

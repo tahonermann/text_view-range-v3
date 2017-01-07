@@ -8,7 +8,9 @@
 #define TEXT_VIEW_ITEXT_ITERATOR_HPP
 
 
-#include <experimental/ranges/iterator>
+#include <iterator>
+#include <range/v3/range_traits.hpp>
+#include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/adl_customization.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/iterator_preserve.hpp>

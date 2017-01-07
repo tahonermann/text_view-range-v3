@@ -9,18 +9,20 @@
 #undef NDEBUG
 #endif
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <forward_list>
 #include <list>
 #include <vector>
 #include <string>
-#include <experimental/ranges/algorithm>
-#include <experimental/ranges/iterator>
-#include <experimental/ranges/utility>
+#include <utility>
+#include <range/v3/range_traits.hpp>
+#include <range/v3/utility/iterator_traits.hpp>
 #include <experimental/text_view>
 #include <text_view_detail/archetypes.hpp>
 #include <text_view_detail/adl_customization.hpp>

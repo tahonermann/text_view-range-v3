@@ -8,8 +8,12 @@
 #define TEXT_VIEW_CONCEPTS_HPP
 
 
-#include <experimental/ranges/concepts>
-#include <experimental/ranges/type_traits>
+#include <utility>
+#include <range/v3/range_concepts.hpp>
+#include <range/v3/range_traits.hpp>
+#include <range/v3/utility/concepts.hpp>
+#include <range/v3/utility/iterator_concepts.hpp>
+#include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/traits.hpp>
 #include <text_view_detail/character_set_id.hpp>
 
