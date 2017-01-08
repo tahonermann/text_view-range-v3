@@ -807,7 +807,11 @@ void test_forward_decode(
         for (auto c : cum.characters) {
             // Decode and advance.
             assert(tvit != end(tv));
-            auto tvcp = *tvit++;
+            // FIXME: itext_iterator lacks support for dereference of post-incremented iterators
+            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/3
+            // auto tvcp = *tvit++;
+            auto tvcp = *tvit;
+            tvit++;
             // Validate the decoded character.
             assert(tvcp == c);
         }

@@ -354,6 +354,9 @@ public:
     // to a copy of the iterator.  This is done to prevent possibly unintended
     // usage of a copy of the stored input iterator that would otherwise
     // invalidate the stored iterator.
+    // FIXME: itext_iterator lacks support for dereference of post-incremented iterators
+    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/3
+    // FIXME: ranges-v3 lacks support for post_increment().
     CONCEPT_REQUIRES(
         ! TextForwardDecoder<encoding_type, iterator_type>())
     post_increment_proxy post_increment() {
