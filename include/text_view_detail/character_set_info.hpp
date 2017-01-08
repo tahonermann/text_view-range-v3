@@ -75,7 +75,11 @@ get_emplaced_character_set_info(
  * Character set info retrieval functions.
  */
 template<typename CST>
-CONCEPT_REQUIRES_(CharacterSet<CST>())>
+// FIXME: Enabling the concept requirement causes the friend declarations
+// FIXME: in character_set_info and character_set_id to fail to match,
+// FIXME: even if appropriate template parameters are added.  This seems
+// FIXME: to be a gcc bug.
+// CONCEPT_REQUIRES_(CharacterSet<CST>())>
 inline
 const character_set_info&
 get_character_set_info() {
