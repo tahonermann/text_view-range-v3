@@ -27,7 +27,7 @@ class itext_sentinel {
 public:
     using view_type = VT;
     using sentinel =
-        ranges::sentinel_t<typename std::add_const<VT>::type>;
+        ranges::range_sentinel_t<typename std::add_const<VT>::type>;
 
     itext_sentinel() = default;
 

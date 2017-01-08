@@ -35,7 +35,7 @@ class itext_cursor_base
     using encoding_type = ET;
     using view_type = VT;
     using iterator_type =
-        ranges::iterator_t<
+        ranges::range_iterator_t<
             typename std::add_const<view_type>::type>;
     using state_type = typename encoding_type::state_type;
 
@@ -166,7 +166,7 @@ class itext_cursor
     using value_type = character_type_t<encoding_type>;
     using reference = value_type;
     using pointer = const value_type*;
-    using difference_type = ranges::difference_type_t<iterator_type>;
+    using difference_type = ranges::iterator_difference_t<iterator_type>;
 
     class post_increment_proxy {
         friend class itext_cursor;

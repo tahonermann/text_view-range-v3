@@ -206,7 +206,7 @@ class iterable_view {
 public:
     using range_type = RT;
     using iterator =
-        typename ranges::iterator_t<
+        typename ranges::range_iterator_t<
             typename std::add_const<RT>::type>;
 
     class sentinel {
@@ -582,8 +582,8 @@ void test_text_sentinel_models() {
     // Archetypes
     static_assert(TextSentinel<text_iterator_archetype, text_iterator_archetype>(), "");
     static_assert(TextSentinel<
-                      ranges::sentinel_t<text_view_archetype>,
-                      ranges::iterator_t<text_view_archetype>>(), "");
+                      ranges::range_sentinel_t<text_view_archetype>,
+                      ranges::range_iterator_t<text_view_archetype>>(), "");
     // std sentinels
     static_assert(TextSentinel<
                       itext_sentinel<basic_execution_character_encoding, text_detail::basic_view<char*>>,

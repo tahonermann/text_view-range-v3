@@ -44,8 +44,12 @@ public:
     using encoding_type = ET;
     using view_type = VT;
     using state_type = typename ET::state_type;
-    using code_unit_iterator = ranges::iterator_t<std::add_const_t<view_type>>;
-    using code_unit_sentinel = ranges::sentinel_t<std::add_const_t<view_type>>;
+    using code_unit_iterator =
+        ranges::range_iterator_t<
+            typename std::add_const<view_type>::type>;
+    using code_unit_sentinel =
+        ranges::range_sentinel_t<
+            typename std::add_const<view_type>::type>;
     using iterator = itext_iterator<ET, VT>;
     using sentinel = itext_sentinel<ET, VT>;
 
@@ -117,7 +121,7 @@ public:
     basic_text_view(
         state_type state,
         code_unit_iterator first,
-        ranges::difference_type_t<code_unit_iterator> n)
+        ranges::iterator_difference_t<code_unit_iterator> n)
     :
         base_type{std::move(state)},
         view{first, std::next(first, n)}
@@ -133,7 +137,7 @@ public:
             code_unit_iterator>())
     basic_text_view(
         code_unit_iterator first,
-        ranges::difference_type_t<code_unit_iterator> n)
+        ranges::iterator_difference_t<code_unit_iterator> n)
     :
         base_type{encoding_type::initial_state()},
         view{first, std::next(first, n)}
@@ -169,7 +173,8 @@ public:
     :
         basic_text_view{std::move(state),
                         str.c_str(),
-                        ranges::difference_type_t<code_unit_iterator>(str.size())}
+                        ranges::iterator_difference_t<
+                            code_unit_iterator>(str.size())}
     {}
 
     // Overload to initialize a text view with an implicitly specified initial
@@ -188,7 +193,8 @@ public:
         const basic_string<charT, traits, Allocator> &str)
     :
         basic_text_view{str.c_str(),
-                        ranges::difference_type_t<code_unit_iterator>(str.size())}
+                        ranges::iterator_difference_t<
+                            code_unit_iterator>(str.size())}
     {}
 
     // Overload to initialize a text view with an explicitly specified initial
@@ -408,7 +414,7 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     IT first,
-    ranges::difference_type_t<IT> n)
+    ranges::iterator_difference_t<IT> n)
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
@@ -426,7 +432,7 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     IT first,
-    ranges::difference_type_t<IT> n)
+    ranges::iterator_difference_t<IT> n)
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
@@ -443,7 +449,7 @@ CONCEPT_REQUIRES_(
     ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
-    ranges::difference_type_t<IT> n)
+    ranges::iterator_difference_t<IT> n)
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(first),
@@ -459,7 +465,7 @@ CONCEPT_REQUIRES_(
     ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
-    ranges::difference_type_t<IT> n)
+    ranges::iterator_difference_t<IT> n)
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(first),

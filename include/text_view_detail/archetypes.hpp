@@ -216,7 +216,7 @@ public:
     using value_type = character_type_t<ET>;
     using reference = character_type_t<ET>&;
     using pointer = character_type_t<ET>*;
-    using difference_type = ranges::difference_type_t<iterator>;
+    using difference_type = ranges::iterator_difference_t<iterator>;
 
     text_iterator_archetype_template();
     text_iterator_archetype_template(iterator, iterator);
@@ -317,7 +317,7 @@ public:
     using value_type = character_type_t<ET>;
     using reference = character_type_t<ET>&;
     using pointer = character_type_t<ET>*;
-    using difference_type = ranges::difference_type_t<iterator>;
+    using difference_type = ranges::iterator_difference_t<iterator>;
 
     text_output_iterator_archetype_template();
     text_output_iterator_archetype_template(iterator, iterator);
@@ -346,7 +346,7 @@ public:
     using view_type = VT;
     using encoding_type = ET;
     using state_type = typename ET::state_type;
-    using code_unit_iterator = ranges::iterator_t<VT>;
+    using code_unit_iterator = ranges::range_iterator_t<VT>;
     using iterator = text_iterator_archetype_template<ET, code_unit_iterator>;
 
     text_view_archetype_template();

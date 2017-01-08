@@ -65,7 +65,7 @@ class otext_cursor
     };
 
 public:
-    using difference_type = ranges::difference_type_t<iterator_type>;
+    using difference_type = ranges::iterator_difference_t<iterator_type>;
 
     class mixin
         : protected ranges::basic_mixin<otext_cursor>
