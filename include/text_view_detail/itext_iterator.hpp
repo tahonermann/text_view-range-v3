@@ -34,7 +34,9 @@ class itext_cursor_base
     using base_type = subobject<typename ET::state_type>;
     using encoding_type = ET;
     using view_type = VT;
-    using iterator_type = ranges::iterator_t<std::add_const_t<view_type>>;
+    using iterator_type =
+        ranges::iterator_t<
+            typename std::add_const<view_type>::type>;
     using state_type = typename encoding_type::state_type;
 
 public:

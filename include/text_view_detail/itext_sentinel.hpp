@@ -26,7 +26,8 @@ CONCEPT_REQUIRES_(
 class itext_sentinel {
 public:
     using view_type = VT;
-    using sentinel = ranges::sentinel_t<std::add_const_t<VT>>;
+    using sentinel =
+        ranges::sentinel_t<typename std::add_const<VT>::type>;
 
     itext_sentinel() = default;
 

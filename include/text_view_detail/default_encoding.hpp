@@ -56,8 +56,8 @@ struct get_default_encoding_type_t<char32_t> {
 template<typename T>
 using default_encoding_type_t =
     typename get_default_encoding_type_t<
-        std::remove_cv_t<
-        std::remove_reference_t<T>>>::type;
+        typename std::remove_cv<
+        typename std::remove_reference<T>::type>::type>::type;
 } // namespace text_detail
 
 

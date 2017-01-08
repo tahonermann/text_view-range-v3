@@ -31,7 +31,8 @@ struct get_code_unit_type_t<T> {
 
 template<typename T>
 using code_unit_type_t =
-          typename get_code_unit_type_t<std::remove_reference_t<T>>::type;
+    typename get_code_unit_type_t<
+        typename std::remove_reference<T>::type>::type;
 } // namespace text_detail
 
 template<typename T>
@@ -53,7 +54,8 @@ struct get_code_point_type_t<T> {
 
 template<typename T>
 using code_point_type_t =
-          typename get_code_point_type_t<std::remove_reference_t<T>>::type;
+    typename get_code_point_type_t<
+        typename std::remove_reference<T>::type>::type;
 } // namespace text_detail
 
 template<typename T>
@@ -75,7 +77,8 @@ struct get_character_set_type_t<T> {
 
 template<typename T>
 using character_set_type_t =
-          typename get_character_set_type_t<std::remove_reference_t<T>>::type;
+    typename get_character_set_type_t<
+        typename std::remove_reference<T>::type>::type;
 } // namespace text_detail
 
 template<typename T>
@@ -97,7 +100,8 @@ struct get_character_type_t<T> {
 
 template<typename T>
 using character_type_t =
-          typename get_character_type_t<std::remove_reference_t<T>>::type;
+    typename get_character_type_t<
+        typename std::remove_reference<T>::type>::type;
 } // namespace text_detail
 
 template<typename T>
@@ -118,7 +122,9 @@ struct get_encoding_type_t<T> {
 };
 
 template<typename T>
-using encoding_type_t = typename get_encoding_type_t<std::remove_reference_t<T>>::type;
+using encoding_type_t =
+    typename get_encoding_type_t<
+        typename std::remove_reference<T>::type>::type;
 } // namespace text_detail
 
 template<typename T>

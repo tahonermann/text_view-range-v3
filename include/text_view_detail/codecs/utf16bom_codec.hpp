@@ -142,7 +142,7 @@ public:
         encoded_code_units = 0;
 
         using unsigned_code_unit_type =
-            std::make_unsigned_t<code_unit_type>;
+            typename std::make_unsigned<code_unit_type>::type;
 
         if (stt.state_transition == state_transition_type::to_initial) {
             // Transition to initial state from any state.

@@ -205,7 +205,9 @@ template<ranges::InputRange RT>
 class iterable_view {
 public:
     using range_type = RT;
-    using iterator = ranges::iterator_t<std::add_const_t<RT>>;
+    using iterator =
+        typename ranges::iterator_t<
+            typename std::add_const<RT>::type>;
 
     class sentinel {
     public:

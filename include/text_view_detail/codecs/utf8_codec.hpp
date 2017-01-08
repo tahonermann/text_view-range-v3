@@ -64,7 +64,7 @@ public:
         encoded_code_units = 0;
 
         using unsigned_code_unit_type =
-            std::make_unsigned_t<code_unit_type>;
+            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp{c.get_code_point()};
@@ -127,7 +127,7 @@ public:
         decoded_code_units = 0;
 
         using unsigned_code_unit_type =
-            std::make_unsigned_t<code_unit_type>;
+            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp;
@@ -214,7 +214,7 @@ public:
         decoded_code_units = 0;
 
         using unsigned_code_unit_type =
-            std::make_unsigned_t<code_unit_type>;
+            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp;
