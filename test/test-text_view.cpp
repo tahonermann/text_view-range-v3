@@ -34,13 +34,6 @@ using namespace std;
 using namespace std::experimental;
 
 
-// Negative concept checks for use in static assertions.
-template<template<typename...> typename T, typename ...Ts>
-concept bool InvalidSpecialization() {
-    return ! requires { typename T<Ts...>; };
-}
-
-
 // code_unit_map specifies the relationship between a state transition or a
 // character with a code unit sequence.  Any of the state_transitions,
 // characters, and code_units vectors may be empty.  In general,
@@ -668,12 +661,6 @@ void test_text_view_models() {
     static_assert(TextView<basic_text_view<char8_character_encoding, text_detail::basic_view<char*>>>(), "");
     static_assert(TextView<basic_text_view<char16_character_encoding, text_detail::basic_view<char16_t*>>>(), "");
     static_assert(TextView<basic_text_view<char32_character_encoding, text_detail::basic_view<char32_t*>>>(), "");
-
-    // Validate that basic_text_view instantiation fails with range types that
-    // are not views.
-    static_assert(InvalidSpecialization<basic_text_view, execution_character_encoding, char(&)[1]>());
-    static_assert(InvalidSpecialization<basic_text_view, execution_character_encoding, std::string>());
-    static_assert(InvalidSpecialization<basic_text_view, execution_character_encoding, std::vector<char>>());
 }
 
 // Test any_character_set.
