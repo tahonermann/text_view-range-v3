@@ -22,7 +22,6 @@ namespace std {
 namespace experimental {
 inline namespace text {
 
-
 namespace text_detail {
 template<typename T, T t1, T t2>
 concept bool SameValue() {
@@ -39,18 +38,20 @@ concept bool SameValue() {
 // FIXME: addressed, is_code_unit_v and is_code_point_v can be removed and
 // FIXME: the original CodeUnit and CodePoint concept definitions restored.
 template<typename T>
-constexpr bool is_code_unit_v =
-    std::is_integral<T>::value
-    && (std::is_unsigned<T>::value
-        || std::is_same<std::remove_cv_t<T>, char>::value
-        || std::is_same<std::remove_cv_t<T>, wchar_t>::value);
+constexpr bool is_code_unit() {
+    return std::is_integral<T>::value
+        && (std::is_unsigned<T>::value
+            || std::is_same<typename std::remove_cv<T>::type, char>::value
+            || std::is_same<typename std::remove_cv<T>::type, wchar_t>::value);
+}
 
 template<typename T>
-constexpr bool is_code_point_v =
-    std::is_integral<T>::value
-    && (std::is_unsigned<T>::value
-        || std::is_same<std::remove_cv_t<T>, char>::value
-        || std::is_same<std::remove_cv_t<T>, wchar_t>::value);
+constexpr bool is_code_point() {
+    return std::is_integral<T>::value
+        && (std::is_unsigned<T>::value
+            || std::is_same<typename std::remove_cv<T>::type, char>::value
+            || std::is_same<typename std::remove_cv<T>::type, wchar_t>::value);
+}
 } // text_detail namespace
 
 
