@@ -144,7 +144,7 @@ public:
     void next() noexcept
     {}
 
-    auto post_increment() noexcept {
+    post_increment_proxy post_increment() noexcept {
         return post_increment_proxy{*this};
     }
 
@@ -176,7 +176,7 @@ template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
-auto make_otext_iterator(
+otext_iterator<ET, IT> make_otext_iterator(
     typename ET::state_type state,
     IT out)
 {
@@ -189,7 +189,7 @@ template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
-auto make_otext_iterator(
+otext_iterator<ET, IT> make_otext_iterator(
     IT out)
 {
     return otext_iterator<ET, IT>{ET::initial_state(), std::move(out)};

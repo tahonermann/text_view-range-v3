@@ -282,7 +282,8 @@ private:
 // verified to be present.
 template<typename CUT, std::size_t N,
 CONCEPT_REQUIRES_(CodeUnit<CUT>())>
-auto make_cstr_view(const CUT (&cstr)[N]) {
+text_detail::basic_view<const CUT*>
+make_cstr_view(const CUT (&cstr)[N]) {
     using view_type = text_detail::basic_view<const CUT*>;
     return view_type{cstr, cstr + (N - 1)};
 }

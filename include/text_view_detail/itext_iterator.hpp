@@ -254,7 +254,9 @@ public:
         template<typename This = const mixin*,
         CONCEPT_REQUIRES_(
             TextForwardDecoder<encoding_type, iterator_type>())>
-        decltype(auto) base_range() const noexcept {
+        auto base_range() const noexcept
+        -> decltype(std::declval<This>()->get().base_range())
+        {
             return this->get().base_range();
         }
 
@@ -349,7 +351,7 @@ public:
     // invalidate the stored iterator.
     CONCEPT_REQUIRES(
         ! TextForwardDecoder<encoding_type, iterator_type>())
-    auto post_increment() {
+    post_increment_proxy post_increment() {
         post_increment_proxy proxy{*this};
         next();
         return proxy;

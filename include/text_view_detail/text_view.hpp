@@ -347,6 +347,7 @@ auto make_text_view(
     typename ET::state_type state,
     IT first,
     ST last)
+-> basic_text_view<ET, VT>
 {
     return basic_text_view<ET, VT>{std::move(state),
                                    std::move(first),
@@ -365,6 +366,9 @@ auto make_text_view(
     typename ET::state_type state,
     IT first,
     ST last)
+-> decltype(make_text_view<ET>(std::move(state),
+                               std::move(first),
+                               std::move(last)))
 {
     return make_text_view<ET>(std::move(state),
                               std::move(first),
@@ -383,6 +387,7 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     IT first,
     ST last)
+-> basic_text_view<ET, VT>
 {
     return basic_text_view<ET, VT>{std::move(first),
                                    std::move(last)};
@@ -399,6 +404,8 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     IT first,
     ST last)
+-> decltype(make_text_view<ET>(std::move(first),
+                               std::move(last)))
 {
     return make_text_view<ET>(std::move(first),
                               std::move(last));
@@ -415,6 +422,9 @@ auto make_text_view(
     typename ET::state_type state,
     IT first,
     ranges::iterator_difference_t<IT> n)
+-> decltype(make_text_view<ET>(std::move(state),
+                               std::move(first),
+                               std::move(std::next(first, n))))
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
@@ -433,6 +443,9 @@ auto make_text_view(
     typename ET::state_type state,
     IT first,
     ranges::iterator_difference_t<IT> n)
+-> decltype(make_text_view<ET>(std::move(state),
+                               std::move(first),
+                               std::move(std::next(first, n))))
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
@@ -450,6 +463,8 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     IT first,
     ranges::iterator_difference_t<IT> n)
+-> decltype(make_text_view<ET>(std::move(first),
+                               std::move(std::next(first, n))))
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(first),
@@ -466,6 +481,8 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     IT first,
     ranges::iterator_difference_t<IT> n)
+-> decltype(make_text_view<ET>(std::move(first),
+                               std::move(std::next(first, n))))
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(first),
@@ -482,6 +499,9 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     const RT &range)
+-> decltype(make_text_view<ET>(std::move(state),
+                               text_detail::adl_begin(range),
+                               text_detail::adl_end(range)))
 {
     return make_text_view<ET>(std::move(state),
                               text_detail::adl_begin(range),
@@ -498,6 +518,9 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     const RT &range)
+-> decltype(make_text_view<ET>(std::move(state),
+                               text_detail::adl_begin(range),
+                               text_detail::adl_end(range)))
 {
     return make_text_view<ET>(std::move(state),
                               text_detail::adl_begin(range),
@@ -512,6 +535,8 @@ CONCEPT_REQUIRES_(
     ranges::InputRange<RT>())>
 auto make_text_view(
     const RT &range)
+-> decltype(make_text_view<ET>(text_detail::adl_begin(range),
+                               text_detail::adl_end(range)))
 {
     return make_text_view<ET>(text_detail::adl_begin(range),
                               text_detail::adl_end(range));
@@ -525,6 +550,8 @@ CONCEPT_REQUIRES_(
     ranges::InputRange<RT>())>
 auto make_text_view(
     const RT &range)
+-> decltype(make_text_view<ET>(text_detail::adl_begin(range),
+                               text_detail::adl_end(range)))
 {
     return make_text_view<ET>(text_detail::adl_begin(range),
                               text_detail::adl_end(range));
@@ -539,6 +566,7 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     TIT first,
     TST last)
+-> decltype(make_text_view<ET>(first.state(), first.base(), last.base()))
 {
     return make_text_view<ET>(first.state(), first.base(), last.base());
 }
@@ -547,7 +575,7 @@ auto make_text_view(
 template<typename TVT,
 CONCEPT_REQUIRES_(
     TextView<TVT>())>
-auto make_text_view(
+TVT make_text_view(
     TVT tv)
 {
     return tv;
