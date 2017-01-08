@@ -422,9 +422,12 @@ auto make_text_view(
     typename ET::state_type state,
     IT first,
     ranges::iterator_difference_t<IT> n)
--> decltype(make_text_view<ET>(std::move(state),
-                               std::move(first),
-                               std::move(std::next(first, n))))
+// FIXME: gcc internal compiler error for some make_text_view overloads when the return type is decltype of another make_text_view overload call
+// FIXME: https://github.com/tahonermann/text_view-range-v3/issues/5
+// -> decltype(make_text_view<ET>(std::move(state),
+//                                std::move(first),
+//                                std::move(std::next(first, n))))
+-> basic_text_view<ET, text_detail::basic_view<IT, IT>>
 {
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
@@ -499,9 +502,16 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     const RT &range)
--> decltype(make_text_view<ET>(std::move(state),
-                               text_detail::adl_begin(range),
-                               text_detail::adl_end(range)))
+// FIXME: gcc internal compiler error for some make_text_view overloads when the return type is decltype of another make_text_view overload call
+// FIXME: https://github.com/tahonermann/text_view-range-v3/issues/5
+// -> decltype(make_text_view<ET>(std::move(state),
+//                                text_detail::adl_begin(range),
+//                                text_detail::adl_end(range)))
+-> basic_text_view<
+    ET,
+    text_detail::basic_view<
+        decltype(text_detail::adl_begin(std::declval<const RT>())),
+        decltype(text_detail::adl_end(std::declval<const RT>()))>>
 {
     return make_text_view<ET>(std::move(state),
                               text_detail::adl_begin(range),
