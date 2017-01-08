@@ -31,6 +31,7 @@ CONCEPT_REQUIRES_(
 class itext_cursor_base
     : private subobject<typename ET::state_type>
 {
+protected:
     using base_type = subobject<typename ET::state_type>;
     using encoding_type = ET;
     using view_type = VT;
@@ -89,6 +90,7 @@ class itext_cursor_data<
                               typename std::add_const<VT>::type>>()>::type>
 : public itext_cursor_base<ET, VT>
 {
+protected:
     using encoding_type = typename itext_cursor_data::encoding_type;
     using view_type = typename itext_cursor_data::view_type;
     using state_type = typename itext_cursor_data::state_type;
@@ -129,6 +131,7 @@ class itext_cursor_data<
                       typename std::add_const<VT>::type>>()>::type>
 : public itext_cursor_base<ET, VT>
 {
+protected:
     using encoding_type = typename itext_cursor_data::encoding_type;
     using view_type = typename itext_cursor_data::view_type;
     using state_type = typename itext_cursor_data::state_type;
