@@ -194,7 +194,8 @@ private:
 
 
 // Range model with different return types for begin() and end().
-template<ranges::InputRange RT>
+template<typename RT,
+CONCEPT_REQUIRES_(ranges::InputRange<RT>())>
 class iterable_view {
 public:
     using range_type = RT;
