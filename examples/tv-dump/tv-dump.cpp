@@ -55,7 +55,8 @@ void dump_code_points(
     istream_iterator<CUT> ifs_in(ifs), ifs_end;
 
     auto tv = make_text_view<ET>(ifs_in, ifs_end);
-    for (const auto &ch : tv) {
+    for (auto tvit = begin(tv); tvit != end(tv); ++tvit) {
+        const auto &ch = *tvit;
         auto csid = ch.get_character_set_id();
         cout << "0x" << hex << setw(8) << setfill('0')
              << (uint_least32_t)ch.get_code_point()
