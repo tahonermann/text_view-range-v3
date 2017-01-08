@@ -9,6 +9,7 @@
 
 
 #include <text_view_detail/encodings/std_encodings.hpp>
+#include <text_view_detail/void_t.hpp>
 
 
 namespace std {
@@ -16,12 +17,14 @@ namespace experimental {
 inline namespace text {
 
 namespace text_detail {
-template<typename T>
+template<typename T, typename Enable = void>
 struct get_default_encoding_type_t;
 
 template<typename T>
-requires requires () { typename T::encoding_type; }
-struct get_default_encoding_type_t<T> {
+struct get_default_encoding_type_t<
+    T,
+    text_detail::void_t<typename T::default_encoding_type>>
+{
     using type = typename T::default_encoding_type;
 };
 
