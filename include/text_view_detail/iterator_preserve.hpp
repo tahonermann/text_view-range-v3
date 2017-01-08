@@ -59,11 +59,18 @@ namespace text_detail {
 //  }
 
 
-// The primary iterator_preserve class template provides functionality for
-// input and output iterators.  It provides the iterator to be preserved as
+template<typename I, typename Enable = void,
+CONCEPT_REQUIRES_(ranges::Iterator<I>())>
+class iterator_preserve;
+
+// This iterator_preserve class template specialization provides functionality
+// for input and output iterators.  It provides the iterator to be preserved as
 // the active iterator and update() is a no-op.
-template<ranges::Iterator I>
-class iterator_preserve {
+template<typename I>
+class iterator_preserve<
+          I,
+          typename std::enable_if<! (bool)ranges::ForwardIterator<I>()>::type>
+{
 public:
     iterator_preserve(I &i) noexcept : preserved(i) {}
 
@@ -84,8 +91,11 @@ private:
 // for forward or better iterators.  It provides a copy of the iterator to be
 // preserved as the active iterator and update() synchronizes the copy back to
 // the preserved iterator.
-template<ranges::ForwardIterator I>
-class iterator_preserve<I> {
+template<typename I>
+class iterator_preserve<
+          I,
+          typename std::enable_if<(bool)ranges::ForwardIterator<I>()>::type>
+{
 public:
     iterator_preserve(I &i)
         noexcept(std::is_nothrow_copy_constructible<I>::value)
