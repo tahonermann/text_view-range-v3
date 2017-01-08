@@ -46,7 +46,8 @@ void usage(
     os << "            utf-32-le" << endl;
 }
 
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 void dump_code_points(
     ifstream &ifs)
 {

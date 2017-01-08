@@ -17,7 +17,8 @@ namespace experimental {
 inline namespace text {
 
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 class character {
 public:
     using character_set_type = CST;
@@ -105,7 +106,8 @@ private:
     code_point_type code_point = {};
 };
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 bool operator==(
     const character<any_character_set> &c1,
     const character<CST> &c2)
@@ -114,7 +116,8 @@ bool operator==(
         && c1.get_code_point() == c2.get_code_point();
 }
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 bool operator==(
     const character<CST> &c1,
     const character<any_character_set> &c2)
@@ -123,7 +126,8 @@ bool operator==(
         && c1.get_code_point() == c2.get_code_point();
 }
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 bool operator!=(
     const character<any_character_set> &c1,
     const character<CST> &c2)
@@ -131,7 +135,8 @@ bool operator!=(
     return !(c1 == c2);
 }
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 bool operator!=(
     const character<CST> &c1,
     const character<any_character_set> &c2)

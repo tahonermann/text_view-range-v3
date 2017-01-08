@@ -49,7 +49,8 @@ concept bool InvalidSpecialization() {
 // sequence of code units.  State transitions that encode code units must not be
 // specified along with a character since decode tests would then be unable to
 // validate the underlying code unit sequence specific to the character.
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 struct code_unit_map {
     using state_transition_type = typename ET::state_transition_type;
     using code_unit_type = code_unit_type_t<ET>;
@@ -64,10 +65,12 @@ struct code_unit_map {
     vector<code_unit_type> code_units;
 };
 
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 using code_unit_map_sequence = vector<code_unit_map<ET>>;
 
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 int character_count(const code_unit_map_sequence<ET> &code_unit_maps) {
     int result = 0;
     for (const auto &cum : code_unit_maps) {
@@ -80,7 +83,8 @@ int character_count(const code_unit_map_sequence<ET> &code_unit_maps) {
 // don't also satisfy forward iterator requirements or impose additional
 // requirements.  istream_iterator, for example, requires a char_traits
 // specialization for its character type.
-template<ranges::InputIterator IT>
+template<typename IT,
+CONCEPT_REQUIRES_(ranges::InputIterator<IT>())>
 class input_iterator
     : public iterator<
                  input_iterator_tag,
@@ -131,8 +135,8 @@ private:
 // specialization for its character type.
 template<
     typename IT,
-    typename T>
-requires ranges::OutputIterator<IT, T>()
+    typename T,
+CONCEPT_REQUIRES_(ranges::OutputIterator<IT, T>())>
 class output_iterator
     : public iterator<
                  output_iterator_tag,
@@ -171,7 +175,8 @@ private:
 // iterators that aren't also forward, bidirectional, or random access
 // iterators.  input_range_view is used to provide wrapped input iterators
 // for another container type.
-template<ranges::InputRange RT>
+template<typename RT,
+CONCEPT_REQUIRES_(ranges::InputRange<RT>())>
 class input_range_view {
 public:
     input_range_view() = default;
@@ -273,7 +278,8 @@ private:
 // literal) that holds a C style string with a null character terminator.  The
 // constructed view excludes the string terminator that is presumed, but not
 // verified to be present.
-template<CodeUnit CUT, std::size_t N>
+template<typename CUT, std::size_t N,
+CONCEPT_REQUIRES_(CodeUnit<CUT>())>
 auto make_cstr_view(const CUT (&cstr)[N]) {
     using view_type = text_detail::basic_view<const CUT*>;
     return view_type{cstr, cstr + (N - 1)};
@@ -696,8 +702,12 @@ void test_any_character_set() {
 // 'it' which must write the resulting code units to the container reflected by
 // 'code_unit_range'.
 template<
-    ranges::InputRange RT,
-    TextOutputIterator TIT>
+    typename RT,
+    typename TIT,
+CONCEPT_REQUIRES_(
+    ranges::InputRange<RT>(),
+    TextOutputIterator<TIT>(),
+    ! ranges::ForwardIterator<TIT>())>
 void test_forward_encode(
     const code_unit_map_sequence<encoding_type_t<TIT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -726,9 +736,12 @@ void test_forward_encode(
 // test.  Characters are encoded via 'it' which must write the resulting code
 // units to the container reflected by 'code_unit_range'.
 template<
-    ranges::InputRange RT,
-    TextOutputIterator TIT>
-requires ranges::ForwardIterator<TIT>()
+    typename RT,
+    typename TIT,
+CONCEPT_REQUIRES_(
+    ranges::InputRange<RT>(),
+    TextOutputIterator<TIT>(),
+    ranges::ForwardIterator<TIT>())>
 void test_forward_encode(
     const code_unit_map_sequence<encoding_type_t<TIT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -761,8 +774,13 @@ void test_forward_encode(
 // this test presumes that text view iteration is restartable so that pre and
 // post increment iteration and iterator equality comparisons can be tested.
 template<
-    ranges::InputRange RT,
-    TextInputView TVT>
+    typename RT,
+    typename TVT,
+CONCEPT_REQUIRES_(
+    ranges::InputRange<RT>(),
+    ! ranges::ForwardRange<RT>(),
+    TextInputView<TVT>(),
+    ! TextForwardView<TVT>())>
 void test_forward_decode(
     const code_unit_map_sequence<encoding_type_t<TVT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -814,8 +832,11 @@ void test_forward_decode(
 // code unit sequences to compare against.  'tv' is expected to provide forward,
 // bidirectional, or random access iterators for this test.
 template<
-    ranges::ForwardRange RT,
-    TextForwardView TVT>
+    typename RT,
+    typename TVT,
+CONCEPT_REQUIRES_(
+    ranges::ForwardRange<RT>(),
+    TextForwardView<TVT>())>
 void test_forward_decode(
     const code_unit_map_sequence<encoding_type_t<TVT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -922,8 +943,11 @@ void test_forward_decode(
 // code unit sequences to compare against.  'tv' is expected to provide
 // bidirectional or random access iterators for this test.
 template<
-    ranges::BidirectionalRange RT,
-    TextBidirectionalView TVT>
+    typename RT,
+    typename TVT,
+CONCEPT_REQUIRES_(
+    ranges::BidirectionalRange<RT>(),
+    TextBidirectionalView<TVT>())>
 void test_reverse_decode(
     const code_unit_map_sequence<encoding_type_t<TVT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -1025,8 +1049,11 @@ void test_reverse_decode(
 // code unit sequences to compare against.  'tv' is expected to provide random
 // access iterators for this test.
 template<
-    ranges::RandomAccessRange RT,
-    TextRandomAccessView TVT>
+    typename RT,
+    typename TVT,
+CONCEPT_REQUIRES_(
+    ranges::RandomAccessRange<RT>(),
+    TextRandomAccessView<TVT>())>
 void test_random_decode(
     const code_unit_map_sequence<encoding_type_t<TVT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -1107,7 +1134,8 @@ void test_random_decode(
 // character encoding specified by 'ET'.  This test exercises encoding and
 // decoding using input and output text iterators with underlying input, output,
 // forward, bidirectional, and random access iterators.
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 void test_forward_encoding(
     const code_unit_map_sequence<ET> &code_unit_maps)
 {
@@ -1250,7 +1278,8 @@ void test_forward_encoding(
 // and decoding using input text iterators with underlying bidirectional, and
 // random access iterators and reverse output text iterators with underlying
 // output, forward, bidirectional, and random access iterators.
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 void test_bidirectional_encoding(
     const code_unit_map_sequence<ET> &code_unit_maps)
 {
@@ -1304,7 +1333,8 @@ void test_bidirectional_encoding(
 // characters, and code unit sequences present in the 'code_unit_maps' sequence
 // for the character encoding specified by 'ET'.  This test exercises decoding
 // using input text iterators with underlying random access iterators.
-template<TextEncoding ET>
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 void test_random_access_encoding(
     const code_unit_map_sequence<ET> &code_unit_maps)
 {
@@ -1327,8 +1357,11 @@ void test_random_access_encoding(
 }
 
 template<
-    TextView TVT,
-    ranges::InputRange RT>
+    typename TVT,
+    typename RT,
+CONCEPT_REQUIRES_(
+    TextView<TVT>(),
+    ranges::InputRange<RT>())>
 void test_text_view(
     const code_unit_map_sequence<encoding_type_t<TVT>> &code_unit_maps,
     const RT &code_unit_range,
@@ -1338,10 +1371,12 @@ void test_text_view(
 }
 
 template<
-    TextView TVT,
+    typename TVT,
     size_t cstr_length,
     size_t ary_length,
-    typename String>
+    typename String,
+CONCEPT_REQUIRES_(
+    TextView<TVT>())>
 void test_construct_text_view(
     const code_unit_map_sequence<encoding_type_t<TVT>>
         &code_unit_maps_with_terminator,
@@ -1497,10 +1532,11 @@ void test_construct_text_view(
 }
 
 template<
-    TextEncoding ET,
+    typename ET,
     size_t cstr_length,
     size_t ary_length,
-    typename String>
+    typename String,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
 void test_make_text_view(
     const code_unit_map_sequence<ET> &code_unit_maps_with_terminator,
     const code_unit_map_sequence<ET> &code_unit_maps_without_terminator,

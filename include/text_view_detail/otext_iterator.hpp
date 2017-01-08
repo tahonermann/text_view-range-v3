@@ -22,7 +22,10 @@ inline namespace text {
 
 namespace text_detail {
 
-template<TextEncoding ET, CodeUnitOutputIterator<code_unit_type_t<ET>> CUIT>
+template<typename ET, typename CUIT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
 class otext_cursor
     : private subobject<typename ET::state_type>
 {
@@ -155,7 +158,10 @@ private:
 /*
  * otext_iterator
  */
-template<TextEncoding ET, CodeUnitOutputIterator<code_unit_type_t<ET>> CUIT>
+template<typename ET, typename CUIT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
 using otext_iterator =
     ranges::basic_iterator<text_detail::otext_cursor<ET, CUIT>>;
 
@@ -166,7 +172,10 @@ using otext_iterator =
 // Overload to construct an output text iterator for an explicitly specified
 // encoding from an output iterator and and an explicitly specified initial
 // encoding state.
-template<TextEncoding ET, CodeUnitOutputIterator<code_unit_type_t<ET>> IT>
+template<typename ET, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
 auto make_otext_iterator(
     typename ET::state_type state,
     IT out)
@@ -176,7 +185,10 @@ auto make_otext_iterator(
 
 // Overload to construct an output text iterator for an explicitly specified
 // encoding from an output iterator and and an implicit initial encoding state.
-template<TextEncoding ET, CodeUnitOutputIterator<code_unit_type_t<ET>> IT>
+template<typename ET, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
 auto make_otext_iterator(
     IT out)
 {

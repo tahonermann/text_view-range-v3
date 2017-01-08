@@ -23,7 +23,8 @@ inline namespace text {
 /*
  * Code unit archetype
  */
-template<CodeUnit CUT>
+template<typename CUT,
+CONCEPT_REQUIRES_(CodeUnit<CUT>())>
 using code_unit_archetype_template = CUT;
 using code_unit_archetype = code_unit_archetype_template<char>;
 
@@ -31,7 +32,8 @@ using code_unit_archetype = code_unit_archetype_template<char>;
 /*
  * Code point archetype
  */
-template<CodePoint CPT>
+template<typename CPT,
+CONCEPT_REQUIRES_(CodePoint<CPT>())>
 using code_point_archetype_template = CPT;
 using code_point_archetype = code_point_archetype_template<char>;
 
@@ -39,7 +41,8 @@ using code_point_archetype = code_point_archetype_template<char>;
 /*
  * Character set archetype
  */
-template<CodePoint CPT>
+template<typename CPT,
+CONCEPT_REQUIRES_(CodePoint<CPT>())>
 struct character_set_archetype_template
 {
     using code_point_type = CPT;
@@ -52,7 +55,8 @@ using character_set_archetype =
 /*
  * Character archetype
  */
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 class character_archetype_template
 {
 public:
@@ -87,7 +91,8 @@ using character_archetype =
 /*
  * Code unit iterator archetype
  */
-template<CodeUnit CUT>
+template<typename CUT,
+CONCEPT_REQUIRES_(CodeUnit<CUT>())>
 using code_unit_iterator_archetype_template = CUT*;
 using code_unit_iterator_archetype =
           code_unit_iterator_archetype_template<code_unit_archetype>;
@@ -96,7 +101,8 @@ using code_unit_iterator_archetype =
 /*
  * Code unit output iterator archetype
  */
-template<CodeUnit CUT>
+template<typename CUT,
+CONCEPT_REQUIRES_(CodeUnit<CUT>())>
 using code_unit_output_iterator_archetype_template = CUT*;
 using code_unit_output_iterator_archetype =
           code_unit_output_iterator_archetype_template<code_unit_archetype>;
@@ -118,12 +124,17 @@ struct text_encoding_state_transition_archetype {};
  * Text encoding archetype
  */
 template<
-    TextEncodingState CST,
-    TextEncodingStateTransition CSTT,
-    CodeUnit CUT,
-    Character C,
+    typename CST,
+    typename CSTT,
+    typename CUT,
+    typename C,
     int MinCodeUnits = 1,
-    int MaxCodeUnits = 1>
+    int MaxCodeUnits = 1,
+CONCEPT_REQUIRES_(
+    TextEncodingState<CST>(),
+    TextEncodingStateTransition<CSTT>(),
+    CodeUnit<CUT>(),
+    Character<C>())>
 struct text_encoding_archetype_template
 {
     using state_type = CST;
@@ -136,24 +147,30 @@ struct text_encoding_archetype_template
 
     static const state_type& initial_state() noexcept;
 
-    template<CodeUnitOutputIterator<code_unit_type> CUIT>
+    template<typename CUIT,
+    CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
     static void encode_state_transition(
         state_type &state,
         CUIT &out,
         const state_transition_type &stt,
         int &encoded_code_units);
 
-    template<CodeUnitOutputIterator<code_unit_type> CUIT>
+    template<typename CUIT,
+    CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
     static void encode(
         state_type &state,
         CUIT &out,
         character_type c,
         int &encoded_code_units);
 
-    template<CodeUnitIterator CUIT, typename CUST>
-    requires ranges::InputIterator<CUIT>()
-          && ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>()
-          && ranges::Sentinel<CUST, CUIT>()
+    template<typename CUIT, typename CUST,
+    CONCEPT_REQUIRES_(
+        CodeUnitIterator<CUIT>(),
+        ranges::InputIterator<CUIT>(),
+        ranges::ConvertibleTo<
+            ranges::iterator_value_t<CUIT>,
+            code_unit_type>(),
+        ranges::Sentinel<CUST, CUIT>())>
     static bool decode(
         state_type &state,
         CUIT &in_next,
@@ -161,10 +178,14 @@ struct text_encoding_archetype_template
         character_type &c,
         int &decoded_code_units);
 
-    template<CodeUnitIterator CUIT, typename CUST>
-    requires ranges::InputIterator<CUIT>()
-          && ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>()
-          && ranges::Sentinel<CUST, CUIT>()
+    template<typename CUIT, typename CUST,
+    CONCEPT_REQUIRES_(
+        CodeUnitIterator<CUIT>(),
+        ranges::InputIterator<CUIT>(),
+        ranges::ConvertibleTo<
+            ranges::iterator_value_t<CUIT>,
+            code_unit_type>(),
+        ranges::Sentinel<CUST, CUIT>())>
     static bool rdecode(
         state_type &state,
         CUIT &in_next,
@@ -182,7 +203,10 @@ using text_encoding_archetype = text_encoding_archetype_template<
 /*
  * Text iterator archetype
  */
-template<TextEncoding ET, CodeUnitIterator CUIT>
+template<typename ET, typename CUIT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitIterator<CUIT>())>
 class text_iterator_archetype_template {
 public:
     using encoding_type = ET;
@@ -280,7 +304,10 @@ using text_iterator_archetype = text_iterator_archetype_template<
 /*
  * Text output iterator archetype
  */
-template<TextEncoding ET, CodeUnitOutputIterator<code_unit_type_t<ET>> CUIT>
+template<typename ET, typename CUIT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
 class text_output_iterator_archetype_template {
 public:
     using encoding_type = ET;
@@ -310,7 +337,10 @@ using text_output_iterator_archetype = text_output_iterator_archetype_template<
 /*
  * Text view archetype
  */
-template<TextEncoding ET, ranges::View VT>
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>())>
 class text_view_archetype_template {
 public:
     using view_type = VT;

@@ -74,7 +74,8 @@ get_emplaced_character_set_info(
 /*
  * Character set info retrieval functions.
  */
-template<CharacterSet CST>
+template<typename CST>
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 inline
 const character_set_info&
 get_character_set_info() {
@@ -94,7 +95,8 @@ get_character_set_info(
     return *text_detail::get_emplaced_character_set_info(id.id);
 }
 
-template<CharacterSet CST>
+template<typename CST,
+CONCEPT_REQUIRES_(CharacterSet<CST>())>
 inline
 character_set_id
 get_character_set_id() {

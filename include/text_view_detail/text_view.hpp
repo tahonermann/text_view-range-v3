@@ -30,7 +30,10 @@ namespace experimental {
 inline namespace text {
 
 
-template<TextEncoding ET, ranges::View VT>
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>())>
 class basic_text_view
     : private text_detail::subobject<typename ET::state_type>,
       public ranges::view_base
@@ -73,12 +76,15 @@ public:
     // Overload to initialize a text view from an InputIterator and Sentinel
     // pair, and an explicitly specified initial encoding state.  This overload
     // requires that view_type be constructible from a code_unit_iterator pair.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator&&,
+            code_unit_sentinel&&>())
     basic_text_view(
         state_type state,
         code_unit_iterator first,
         code_unit_sentinel last)
-    requires ranges::Constructible<
-                 view_type, code_unit_iterator&&, code_unit_sentinel&&>()
     :
         base_type{std::move(state)},
         view{std::move(first), std::move(last)}
@@ -87,11 +93,14 @@ public:
     // Overload to initialize a text view from an InputIterator and Sentinel
     // pair, and an implicit initial encoding state.  This overload requires
     // that view_type be constructible from a code_unit_iterator pair.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator&&,
+            code_unit_sentinel&&>())
     basic_text_view(
         code_unit_iterator first,
         code_unit_sentinel last)
-    requires ranges::Constructible<
-                 view_type, code_unit_iterator&&, code_unit_sentinel&&>()
     :
         base_type{encoding_type::initial_state()},
         view{std::move(first), std::move(last)}
@@ -100,12 +109,15 @@ public:
     // Overload to initialize a text view from an InputIterator and count pair,
     // and an explicitly specified initial encoding state.  This overload
     // requires that view_type be constructible from a code_unit_iterator pair.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_iterator>())
     basic_text_view(
         state_type state,
         code_unit_iterator first,
         ranges::difference_type_t<code_unit_iterator> n)
-    requires ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_iterator>()
     :
         base_type{std::move(state)},
         view{first, std::next(first, n)}
@@ -114,11 +126,14 @@ public:
     // Overload to initialize a text view from an InputIterator and count pair,
     // and an implicit initial encoding state.  This overload requires that
     // view_type be constructible from a code_unit_iterator pair.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_iterator>())
     basic_text_view(
         code_unit_iterator first,
         ranges::difference_type_t<code_unit_iterator> n)
-    requires ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_iterator>()
     :
         base_type{encoding_type::initial_state()},
         view{first, std::next(first, n)}
@@ -140,16 +155,17 @@ public:
     // iterators into the provided basic_string object will be held, the
     // basic_string reference must reference an object with a lifetime that
     // exceeds the lifetime of the basic_text_view object being constructed.
-    template<typename charT, typename traits, typename Allocator>
+    template<typename charT, typename traits, typename Allocator,
+    CONCEPT_REQUIRES_(
+        ranges::Constructible<code_unit_iterator, const charT *>(),
+        ranges::ConvertibleTo< // Allow narrowing conversions.
+            ranges::iterator_difference_t<code_unit_iterator>,
+            typename basic_string<charT, traits, Allocator>::size_type>(),
+        ranges::Constructible<
+            view_type, code_unit_iterator, code_unit_sentinel>())>
     basic_text_view(
         state_type state,
         const basic_string<charT, traits, Allocator> &str)
-    requires ranges::Constructible<code_unit_iterator, const charT *>()
-          && ranges::ConvertibleTo< // Allow narrowing conversions.
-                 ranges::difference_type_t<code_unit_iterator>,
-                 typename basic_string<charT, traits, Allocator>::size_type>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_sentinel>()
     :
         basic_text_view{std::move(state),
                         str.c_str(),
@@ -160,15 +176,16 @@ public:
     // encoding state and a basic_string specialization.  See the above comments
     // for the similar overload that accepts an explicitly specified initial
     // state.
-    template<typename charT, typename traits, typename Allocator>
+    template<typename charT, typename traits, typename Allocator,
+    CONCEPT_REQUIRES_(
+        ranges::Constructible<code_unit_iterator, const charT *>(),
+        ranges::ConvertibleTo< // Allow narrowing conversions.
+            ranges::iterator_difference_t<code_unit_iterator>,
+            typename basic_string<charT, traits, Allocator>::size_type>(),
+        ranges::Constructible<
+            view_type, code_unit_iterator, code_unit_sentinel>())>
     basic_text_view(
         const basic_string<charT, traits, Allocator> &str)
-    requires ranges::Constructible<code_unit_iterator, const charT *>()
-          && ranges::ConvertibleTo< // Allow narrowing conversions.
-                 ranges::difference_type_t<code_unit_iterator>,
-                 typename basic_string<charT, traits, Allocator>::size_type>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_sentinel>()
     :
         basic_text_view{str.c_str(),
                         ranges::difference_type_t<code_unit_iterator>(str.size())}
@@ -181,14 +198,19 @@ public:
     // InputRange object will be held, the specified range must be a reference
     // to an object with a lifetime that exceeds the lifetime of the
     // basic_text_view object being constructed.
-    template<ranges::InputRange RT>
+    template<typename RT,
+    CONCEPT_REQUIRES_(
+        ranges::InputRange<RT>(),
+        ranges::Constructible<
+            code_unit_iterator,
+            ranges::range_iterator_t<const RT>>(),
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_sentinel>())>
     basic_text_view(
         state_type state,
         const RT &range)
-    requires ranges::Constructible<
-                 code_unit_iterator, ranges::iterator_t<const RT>>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_sentinel>()
     :
         basic_text_view(std::move(state),
                         text_detail::adl_begin(range),
@@ -199,13 +221,18 @@ public:
     // encoding state and an InputIterator and Sentinel extracted from a
     // supplied InputRange.  See the above comments for the similar overload
     // that accepts an explicitly specified initial state.
-    template<ranges::InputRange RT>
+    template<typename RT,
+    CONCEPT_REQUIRES_(
+        ranges::InputRange<RT>(),
+        ranges::Constructible<
+            code_unit_iterator,
+            ranges::range_iterator_t<const RT>>(),
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_sentinel>())>
     basic_text_view(
         const RT &range)
-    requires ranges::Constructible<
-                 code_unit_iterator, ranges::iterator_t<const RT>>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_sentinel>()
     :
         basic_text_view(text_detail::adl_begin(range),
                         text_detail::adl_end(range))
@@ -213,28 +240,34 @@ public:
 
     // Overload to initialize a text view from a text iterator pair.
     // The initial encoding state is inferred from the first iterator.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            code_unit_iterator,
+            decltype(std::declval<iterator>().base())>(),
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_iterator>())
     basic_text_view(
         iterator first,
         iterator last)
-    requires ranges::Constructible<
-                 code_unit_iterator,
-                 decltype(std::declval<iterator>().base())>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_iterator>()
     :
         basic_text_view{first.state(), first.base(), last.base()}
     {}
 
     // Overload to initialize a text view from a text iterator/sentinel pair.
     // The initial encoding state is inferred from the first iterator.
+    CONCEPT_REQUIRES(
+        ranges::Constructible<
+            code_unit_iterator,
+            decltype(std::declval<iterator>().base())>(),
+        ranges::Constructible<
+            view_type,
+            code_unit_iterator,
+            code_unit_sentinel>())
     basic_text_view(
         iterator first,
         sentinel last)
-    requires ranges::Constructible<
-                 code_unit_iterator,
-                 decltype(std::declval<iterator>().base())>()
-          && ranges::Constructible<
-                 view_type, code_unit_iterator, code_unit_sentinel>()
     :
         basic_text_view{first.state(), first.base(), last.base()}
     {}
@@ -253,16 +286,18 @@ public:
     iterator begin() const {
         return iterator{initial_state(), &view, text_detail::adl_begin(view)};
     }
+    CONCEPT_REQUIRES(
+        std::is_empty<state_type>::value &&
+        ranges::Iterator<code_unit_sentinel>())
     iterator end() const
-    requires std::is_empty<state_type>::value
-          && ranges::Iterator<code_unit_sentinel>()
     {
         // Use the (empty) initial state to construct the end iterator.
         return iterator{ET::initial_state(), &view, text_detail::adl_end(view)};
     }
+    CONCEPT_REQUIRES(
+        ! std::is_empty<state_type>::value ||
+        ! ranges::Iterator<code_unit_sentinel>())
     sentinel end() const
-    requires !std::is_empty<state_type>::value
-          || !ranges::Iterator<code_unit_sentinel>()
     {
         return sentinel{text_detail::adl_end(view)};
     }
@@ -296,32 +331,35 @@ using u32text_view = basic_text_view<
 // Overload to construct a text view for an explicitly specified encoding type
 // from an InputIterator and Sentinel pair, and an explicitly specified initial
 // encoding state.
-template<TextEncoding ET, ranges::InputIterator IT, ranges::Sentinel<IT> ST>
+template<typename ET, typename IT, typename ST,
+         typename VT = text_detail::basic_view<IT, ST>,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
 auto make_text_view(
     typename ET::state_type state,
     IT first,
     ST last)
 {
-    using view_type = text_detail::basic_view<IT, ST>;
-    return basic_text_view<ET, view_type>{std::move(state),
-                                          std::move(first),
-                                          std::move(last)};
+    return basic_text_view<ET, VT>{std::move(state),
+                                   std::move(first),
+                                   std::move(last)};
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
 // from an InputIterator and Sentinel pair, and an explicitly specified initial
 // encoding state.
-template<ranges::InputIterator IT, ranges::Sentinel<IT> ST>
-requires requires () {
-    typename default_encoding_type_t<ranges::value_type_t<IT>>;
-}
+template<typename IT, typename ST, typename ET =
+         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+CONCEPT_REQUIRES_(
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
 auto make_text_view(
-    typename default_encoding_type_t<
-        ranges::value_type_t<IT>>::state_type state,
+    typename ET::state_type state,
     IT first,
     ST last)
 {
-    using ET = default_encoding_type_t<ranges::value_type_t<IT>>;
     return make_text_view<ET>(std::move(state),
                               std::move(first),
                               std::move(last));
@@ -330,28 +368,32 @@ auto make_text_view(
 // Overload to construct a text view for an explicitly specified encoding type
 // from an InputIterator and Sentinel pair, and an implicit initial encoding
 // state.
-template<TextEncoding ET, ranges::InputIterator IT, ranges::Sentinel<IT> ST>
+template<typename ET, typename IT, typename ST,
+         typename VT = text_detail::basic_view<IT, ST>,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
 auto make_text_view(
     IT first,
     ST last)
 {
-    using view_type = text_detail::basic_view<IT, ST>;
-    return basic_text_view<ET, view_type>{std::move(first),
-                                          std::move(last)};
+    return basic_text_view<ET, VT>{std::move(first),
+                                   std::move(last)};
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
 // from an InputIterator and Sentinel pair, and an implicit initial encoding
 // state.
-template<ranges::InputIterator IT, ranges::Sentinel<IT> ST>
-requires requires () {
-    typename default_encoding_type_t<ranges::value_type_t<IT>>;
-}
+template<typename IT, typename ST, typename ET =
+         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+CONCEPT_REQUIRES_(
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
 auto make_text_view(
     IT first,
     ST last)
 {
-    using ET = default_encoding_type_t<ranges::value_type_t<IT>>;
     return make_text_view<ET>(std::move(first),
                               std::move(last));
 }
@@ -359,7 +401,10 @@ auto make_text_view(
 // Overload to construct a text view for an explicitly specified encoding type
 // from a ForwardIterator and count pair, and an explicitly specified initial
 // encoding state.
-template<TextEncoding ET, ranges::ForwardIterator IT>
+template<typename ET, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::ForwardIterator<IT>())>
 auto make_text_view(
     typename ET::state_type state,
     IT first,
@@ -374,17 +419,15 @@ auto make_text_view(
 // Overload to construct a text view for an implicitly assumed encoding type
 // from a ForwardIterator and count pair, and an explicitly specified initial
 // encoding state.
-template<ranges::ForwardIterator IT>
-requires requires () {
-    typename default_encoding_type_t<ranges::value_type_t<IT>>;
-}
+template<typename IT, typename ET =
+         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+CONCEPT_REQUIRES_(
+    ranges::ForwardIterator<IT>())>
 auto make_text_view(
-    typename default_encoding_type_t<
-        ranges::value_type_t<IT>>::state_type state,
+    typename ET::state_type state,
     IT first,
     ranges::difference_type_t<IT> n)
 {
-    using ET = default_encoding_type_t<ranges::value_type_t<IT>>;
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(state),
                               std::move(first),
@@ -394,7 +437,10 @@ auto make_text_view(
 // Overload to construct a text view for an explicitly specified encoding type
 // from a ForwardIterator and count pair, and an implicit initial encoding
 // state.
-template<TextEncoding ET, ranges::ForwardIterator IT>
+template<typename ET, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
     ranges::difference_type_t<IT> n)
@@ -407,15 +453,14 @@ auto make_text_view(
 // Overload to construct a text view for an implicitly assumed encoding type
 // from a ForwardIterator and count pair, and an implicit initial encoding
 // state.
-template<ranges::ForwardIterator IT>
-requires requires () {
-    typename default_encoding_type_t<ranges::value_type_t<IT>>;
-}
+template<typename IT, typename ET =
+         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+CONCEPT_REQUIRES_(
+    ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
     ranges::difference_type_t<IT> n)
 {
-    using ET = default_encoding_type_t<ranges::value_type_t<IT>>;
     auto last = std::next(first, n);
     return make_text_view<ET>(std::move(first),
                               std::move(last));
@@ -424,7 +469,10 @@ auto make_text_view(
 // Overload to construct a text view for an explicitly specified encoding type
 // from an InputRange const reference and an explicitly specified initial
 // encoding state.
-template<TextEncoding ET, ranges::InputRange RT>
+template<typename ET, typename RT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::InputRange<RT>())>
 auto make_text_view(
     typename ET::state_type state,
     const RT &range)
@@ -437,18 +485,14 @@ auto make_text_view(
 // Overload to construct a text view for an implicitly assumed encoding type
 // from an InputRange const reference and an explicitly specified initial
 // encoding state.
-template<ranges::InputRange RT>
-requires requires () {
-    typename default_encoding_type_t<
-        ranges::value_type_t<ranges::iterator_t<RT>>>;
-}
+template<typename RT, typename ET =
+         default_encoding_type_t<ranges::range_value_t<RT>>,
+CONCEPT_REQUIRES_(
+    ranges::InputRange<RT>())>
 auto make_text_view(
-    typename default_encoding_type_t<
-        ranges::value_type_t<ranges::iterator_t<RT>>>::state_type state,
+    typename ET::state_type state,
     const RT &range)
 {
-    using ET =
-        default_encoding_type_t<ranges::value_type_t<ranges::iterator_t<RT>>>;
     return make_text_view<ET>(std::move(state),
                               text_detail::adl_begin(range),
                               text_detail::adl_end(range));
@@ -456,7 +500,10 @@ auto make_text_view(
 
 // Overload to construct a text view for an explicitly specified encoding type
 // from an InputRange const reference and an implicit initial encoding state.
-template<TextEncoding ET, ranges::InputRange RT>
+template<typename ET, typename RT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::InputRange<RT>())>
 auto make_text_view(
     const RT &range)
 {
@@ -466,35 +513,34 @@ auto make_text_view(
 
 // Overload to construct a text view for an implicitly assumed encoding type
 // from an InputRange const reference and an implicit initial encoding state.
-template<ranges::InputRange RT>
-requires requires () {
-    typename default_encoding_type_t<
-        ranges::value_type_t<ranges::iterator_t<RT>>>;
-}
+template<typename RT, typename ET =
+         default_encoding_type_t<ranges::range_value_t<RT>>,
+CONCEPT_REQUIRES_(
+    ranges::InputRange<RT>())>
 auto make_text_view(
     const RT &range)
 {
-    using ET =
-        default_encoding_type_t<ranges::value_type_t<ranges::iterator_t<RT>>>;
     return make_text_view<ET>(text_detail::adl_begin(range),
                               text_detail::adl_end(range));
 }
 
 // Overload to construct a text view from a text iterator and sentinel pair.
 // The initial encoding state is inferred from the first iterator.
-template<TextIterator TIT, TextSentinel<TIT> TST>
+template<typename TIT, typename TST, typename ET = encoding_type_t<TIT>,
+CONCEPT_REQUIRES_(
+    TextIterator<TIT>(),
+    TextSentinel<TST, TIT>())>
 auto make_text_view(
     TIT first,
     TST last)
 {
-    using ET = encoding_type_t<TIT>;
-    return make_text_view<ET>(first.state(),
-                              first.base(),
-                              last.base());
+    return make_text_view<ET>(first.state(), first.base(), last.base());
 }
 
 // Overload to construct a text view from an existing text view.
-template<TextView TVT>
+template<typename TVT,
+CONCEPT_REQUIRES_(
+    TextView<TVT>())>
 auto make_text_view(
     TVT tv)
 {

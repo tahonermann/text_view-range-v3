@@ -16,7 +16,10 @@ namespace experimental {
 inline namespace text {
 namespace text_detail {
 
-template<ranges::Iterator IT, ranges::Sentinel<IT> ST = IT>
+template<typename IT, typename ST = IT,
+CONCEPT_REQUIRES_(
+    ranges::Iterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
 class basic_view : public ranges::view_base
 {
 public:

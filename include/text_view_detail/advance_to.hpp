@@ -16,12 +16,16 @@ namespace experimental {
 inline namespace text {
 namespace text_detail {
 
-template<ranges::InputIterator IT>
+template<typename IT,
+CONCEPT_REQUIRES_(ranges::InputIterator<IT>())>
 IT advance_to(IT i, IT s) {
     return s;
 }
 
-template<ranges::InputIterator IT, ranges::Sentinel<IT> ST>
+template<typename IT, typename ST,
+CONCEPT_REQUIRES_(
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST,IT>())>
 IT advance_to(IT i, ST s) {
     while(i != s) {
         ++i;

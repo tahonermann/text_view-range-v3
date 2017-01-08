@@ -24,8 +24,10 @@ inline namespace text {
 
 namespace text_detail {
 
-
-template<TextEncoding ET, ranges::View VT>
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>())>
 class itext_cursor_base
     : private subobject<typename ET::state_type>
 {
@@ -147,7 +149,11 @@ private:
     current_view_type current_view;
 };
 
-template<TextEncoding ET, ranges::View VT>
+
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>())>
 class itext_cursor
     : public itext_cursor_data<ET, VT>
 {
@@ -217,10 +223,10 @@ public:
             return this->get().base();
         }
 
-        decltype(auto) base_range() const noexcept
-        requires TextDecoder<encoding_type, iterator_type>()
-              && ranges::ForwardIterator<iterator_type>()
-        {
+        template<typename This = const mixin*,
+        CONCEPT_REQUIRES_(
+            TextForwardDecoder<encoding_type, iterator_type>())>
+        decltype(auto) base_range() const noexcept {
             return this->get().base_range();
         }
 
@@ -258,6 +264,8 @@ public:
         return &value;
     }
 
+    CONCEPT_REQUIRES(
+        ! TextForwardDecoder<encoding_type, iterator_type>())
     void next() {
         ok = false;
         auto preserved_base = make_iterator_preserve(this->base());
@@ -280,9 +288,9 @@ public:
         }
     }
 
-    void next()
-        requires TextForwardDecoder<encoding_type, iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        TextForwardDecoder<encoding_type, iterator_type>())
+    void next() {
         ok = false;
         this->base_range().first = this->base_range().last;
         iterator_type tmp_iterator{this->base_range().first};
@@ -311,17 +319,17 @@ public:
     // to a copy of the iterator.  This is done to prevent possibly unintended
     // usage of a copy of the stored input iterator that would otherwise
     // invalidate the stored iterator.
-    auto post_increment()
-        requires ! TextForwardDecoder<encoding_type, iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        ! TextForwardDecoder<encoding_type, iterator_type>())
+    auto post_increment() {
         post_increment_proxy proxy{*this};
         next();
         return proxy;
     }
 
-    void prev()
-        requires TextBidirectionalDecoder<encoding_type, iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        TextBidirectionalDecoder<encoding_type, iterator_type>())
+    void prev() {
         ok = false;
         this->base_range().last = this->base_range().first;
         std::reverse_iterator<iterator_type> rcurrent{this->base_range().last};
@@ -346,9 +354,9 @@ public:
         }
     }
 
-    void advance(difference_type n)
-        requires TextRandomAccessDecoder<encoding_type, iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        TextRandomAccessDecoder<encoding_type, iterator_type>())
+    void advance(difference_type n) {
         if (n < 0) {
             this->base_range().first +=
                 ((n+1) * encoding_type::max_code_units);
@@ -360,13 +368,15 @@ public:
         }
     }
 
-    difference_type distance_to(const itext_cursor &other) const
-        requires TextRandomAccessDecoder<encoding_type, iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        TextRandomAccessDecoder<encoding_type, iterator_type>())
+    difference_type distance_to(const itext_cursor &other) const {
         return (other.base_range().first - this->base_range().first) /
                encoding_type::max_code_units;
     }
 
+    CONCEPT_REQUIRES(
+        ! ranges::ForwardIterator<iterator_type>())
     bool equal(const itext_cursor &other) const {
         // For input iterators, the base iterator corresponds to the next input
         // to be decoded.  Naively checking for base comparison only therefore
@@ -379,9 +389,9 @@ public:
         return ok == other.ok
             && (!ok || this->base() == other.base());
     }
-    bool equal(const itext_cursor &other) const
-        requires ranges::ForwardIterator<iterator_type>()
-    {
+    CONCEPT_REQUIRES(
+        ranges::ForwardIterator<iterator_type>())
+    bool equal(const itext_cursor &other) const {
         return this->base() == other.base();
     }
 
@@ -396,8 +406,14 @@ private:
 /*
  * itext_iterator
  */
-template<TextEncoding ET, ranges::View VT>
-requires TextDecoder<ET, ranges::iterator_t<std::add_const_t<VT>>>()
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>(),
+    TextDecoder<
+        ET,
+        ranges::range_iterator_t<
+            typename std::add_const<VT>::type>>())>
 using itext_iterator =
     ranges::basic_iterator<text_detail::itext_cursor<ET, VT>>;
 

@@ -110,7 +110,8 @@ private:
 };
 
 
-template<ranges::Iterator I>
+template<typename I,
+CONCEPT_REQUIRES_(ranges::Iterator<I>())>
 auto make_iterator_preserve(I &i) {
     return iterator_preserve<I>{i};
 }

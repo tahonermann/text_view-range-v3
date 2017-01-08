@@ -67,7 +67,10 @@ struct utf8bom_encoding_state {
 
 namespace text_detail {
 
-template<Character CT, CodeUnit CUT>
+template<typename CT, typename CUT,
+CONCEPT_REQUIRES_(
+    Character<CT>(),
+    CodeUnit<CUT>())>
 class utf8bom_codec {
 public:
     using state_type = utf8bom_encoding_state;
@@ -79,7 +82,11 @@ public:
 
     static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8, "");
 
-    template<CodeUnitOutputIterator<std::make_unsigned_t<code_unit_type>> CUIT>
+    template<typename CUIT,
+    CONCEPT_REQUIRES_(
+        CodeUnitOutputIterator<
+            CUIT,
+            typename std::make_unsigned<code_unit_type>::type>())>
     static void encode_state_transition(
         state_type &state,
         CUIT &out,
@@ -112,7 +119,11 @@ public:
         }
     }
 
-    template<CodeUnitOutputIterator<std::make_unsigned_t<code_unit_type>> CUIT>
+    template<typename CUIT,
+    CONCEPT_REQUIRES_(
+        CodeUnitOutputIterator<
+            CUIT,
+            typename std::make_unsigned<code_unit_type>::type>())>
     static void encode(
         state_type &state,
         CUIT &out,
@@ -142,12 +153,14 @@ public:
         encoded_code_units += utf8_encoded_code_units;
     }
 
-    template<CodeUnitIterator CUIT, typename CUST>
-    requires ranges::InputIterator<CUIT>()
-          && ranges::ConvertibleTo<
-                 ranges::value_type_t<CUIT>,
-                 std::make_unsigned_t<code_unit_type>>()
-          && ranges::Sentinel<CUST, CUIT>()
+    template<typename CUIT, typename CUST,
+    CONCEPT_REQUIRES_(
+        CodeUnitIterator<CUIT>(),
+        ranges::InputIterator<CUIT>(),
+        ranges::ConvertibleTo<
+            ranges::iterator_value_t<CUIT>,
+            typename std::make_unsigned<code_unit_type>::type>(),
+        ranges::Sentinel<CUST, CUIT>())>
     static bool decode(
         state_type &state,
         CUIT &in_next,
@@ -187,12 +200,14 @@ public:
         return return_value;
     }
 
-    template<CodeUnitIterator CUIT, typename CUST>
-    requires ranges::InputIterator<CUIT>()
-          && ranges::ConvertibleTo<
-                 ranges::value_type_t<CUIT>,
-                 std::make_unsigned_t<code_unit_type>>()
-          && ranges::Sentinel<CUST, CUIT>()
+    template<typename CUIT, typename CUST,
+    CONCEPT_REQUIRES_(
+        CodeUnitIterator<CUIT>(),
+        ranges::InputIterator<CUIT>(),
+        ranges::ConvertibleTo<
+            ranges::iterator_value_t<CUIT>,
+            typename std::make_unsigned<code_unit_type>::type>(),
+        ranges::Sentinel<CUST, CUIT>())>
     static bool rdecode(
         state_type &state,
         CUIT &in_next,

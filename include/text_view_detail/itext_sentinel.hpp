@@ -19,7 +19,10 @@ namespace experimental {
 inline namespace text {
 
 
-template<TextEncoding ET, ranges::View VT>
+template<typename ET, typename VT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>())>
 class itext_sentinel {
 public:
     using view_type = VT;
@@ -75,6 +78,9 @@ public:
     }
 
 private:
+    CONCEPT_REQUIRES(
+        ! ranges::ForwardIterator<
+              decltype(std::declval<const itext_iterator<ET, VT>&>().base())>())
     bool equal(const itext_iterator<ET, VT> &ti) const {
         // For input iterators, the base iterator corresponds to the next input
         // to be decoded.  Naively checking for base comparison only therefore
@@ -87,9 +93,10 @@ private:
         return ti.base() == base()
             && ! ti.is_ok();
     }
-    bool equal(const itext_iterator<ET, VT> &ti) const
-        requires ranges::ForwardIterator<decltype(ti.base())>()
-    {
+    CONCEPT_REQUIRES(
+        ranges::ForwardIterator<
+              decltype(std::declval<const itext_iterator<ET, VT>&>().base())>())
+    bool equal(const itext_iterator<ET, VT> &ti) const {
         return ti.base() == base();
     }
 
