@@ -18,8 +18,32 @@ inline namespace text {
 namespace text_detail {
 
 
-template<ranges::Semiregular T>
-class subobject {
+enum class subobject_specialization {
+    base,
+    member
+};
+
+template<typename T>
+constexpr subobject_specialization
+select_subobject_specialization() noexcept {
+    return std::is_class<T>::value
+#if __cplusplus >= 201402L
+               && ! std::is_final<T>::value
+#endif
+           ? subobject_specialization::base
+           : subobject_specialization::member;
+}
+
+
+// Primary class template is incomplete.
+template<typename T,
+subobject_specialization = select_subobject_specialization<T>(),
+CONCEPT_REQUIRES_(ranges::SemiRegular<T>())>
+class subobject;
+
+// Specialization for embedding as a data member.
+template<typename T>
+class subobject<T, subobject_specialization::member> {
 public:
     constexpr subobject() = default;
 
@@ -31,7 +55,10 @@ public:
         noexcept(std::is_nothrow_move_constructible<T>::value)
     : t(std::move(t)) {}
 
-    constexpr T& get() noexcept {
+#if __cplusplus >= 201402L
+    constexpr
+#endif
+    T& get() noexcept {
         return t;
     }
     constexpr const T& get() const noexcept {
@@ -42,10 +69,9 @@ private:
     T t;
 };
 
-template<ranges::Semiregular T>
-requires std::is_class<T>::value
-      && ! std::is_final<T>::value
-class subobject<T>
+// Specialization for embedding as a base class.
+template<typename T>
+class subobject<T, subobject_specialization::base>
     : public T
 {
 public:
@@ -59,7 +85,10 @@ public:
         noexcept(std::is_nothrow_move_constructible<T>::value)
     : T(std::move(t)) {}
 
-    constexpr T& get() noexcept {
+#if __cplusplus >= 201402L
+    constexpr
+#endif
+    T& get() noexcept {
         return *this;
     }
     constexpr const T& get() const noexcept {

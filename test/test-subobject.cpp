@@ -23,9 +23,13 @@ struct with_empty : subobject<empty_class> { int i; };
 // Embedding an empty class should use the empty base class optimization.
 static_assert(sizeof(with_empty) == sizeof(int), "");
 
+// Embedding a final empty class fails prior to C++14 due to the lack of
+// std::is_final.
+#if __cplusplus >= 201402L
 struct with_final_empty : subobject<empty_final_class> { int i; };
 // Embedding a final empty class cannot use the empty base class optimization.
 static_assert(sizeof(with_final_empty) != sizeof(int), "");
+#endif
 
 struct with_int : subobject<int> { int i; };
 
