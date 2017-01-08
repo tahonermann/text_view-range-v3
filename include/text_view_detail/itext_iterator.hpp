@@ -65,10 +65,29 @@ private:
     const view_type *view;
 };
 
-template<TextEncoding ET, ranges::View VT>
-requires TextDecoder<ET, ranges::iterator_t<std::add_const_t<VT>>>()
-class itext_cursor_data
-    : public itext_cursor_base<ET, VT>
+
+// Primary class template is incomplete.
+template<typename ET, typename VT, typename Enable = void,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    ranges::View<VT>(),
+    TextDecoder<
+        ET,
+        ranges::range_iterator_t<
+            typename std::add_const<VT>::type>>())>
+class itext_cursor_data;
+
+// Specialization for input views.
+template<typename ET, typename VT>
+class itext_cursor_data<
+          ET,
+          VT,
+          typename std::enable_if<
+              ! (bool)TextForwardDecoder<
+                          ET,
+                          ranges::range_iterator_t<
+                              typename std::add_const<VT>::type>>()>::type>
+: public itext_cursor_base<ET, VT>
 {
     using encoding_type = typename itext_cursor_data::encoding_type;
     using view_type = typename itext_cursor_data::view_type;
@@ -98,10 +117,17 @@ private:
     iterator_type current;
 };
 
-template<TextEncoding ET, ranges::View VT>
-requires TextForwardDecoder<ET, ranges::iterator_t<std::add_const_t<VT>>>()
-class itext_cursor_data<ET, VT>
-    : public itext_cursor_base<ET, VT>
+// Specialization for forward views.
+template<typename ET, typename VT>
+class itext_cursor_data<
+          ET,
+          VT,
+          typename std::enable_if<
+              (bool)TextForwardDecoder<
+                  ET,
+                  ranges::range_iterator_t<
+                      typename std::add_const<VT>::type>>()>::type>
+: public itext_cursor_base<ET, VT>
 {
     using encoding_type = typename itext_cursor_data::encoding_type;
     using view_type = typename itext_cursor_data::view_type;
