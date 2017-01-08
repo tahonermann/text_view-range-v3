@@ -144,6 +144,9 @@ public:
     void next() noexcept
     {}
 
+    // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
+    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
+    // FIXME: ranges-v3 lacks support for post_increment().
     post_increment_proxy post_increment() noexcept {
         return post_increment_proxy{*this};
     }

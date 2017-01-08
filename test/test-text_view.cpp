@@ -706,10 +706,18 @@ void test_forward_encode(
 {
     for (const auto &cum : code_unit_maps) {
         for (auto st : cum.state_transitions) {
-            *it++ = st;
+            // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
+            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
+            // *it++ = st;
+            *it = st;
+            it++;
         }
         for (auto c : cum.characters) {
-            *it++ = c;
+            // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
+            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
+            // *it++ = c;
+            *it = c;
+            it++;
         }
     }
     auto code_unit_it = begin(code_unit_range);
