@@ -50,13 +50,13 @@ dependencies.
 [Text_view for range-v3][Text_view-range-v3] only depends on headers provided
 by [range-v3] and no build or installation is required.
 [Text_view for range-v3][Text_view-range-v3] is known to build successfully with
-[range-v3] git revision `FIXME`.  The
+[range-v3] git revision `5c1c78466bee12675c7efad82f935b1f8c6b43af`.  The
 following commands can be used to checkout a known good revision.
 
 ```sh
 $ git clone https://github.com/ericniebler/range-v3.git range-v3
 $ cd range-v3
-$ git checkout FIXME
+$ git checkout 5c1c78466bee12675c7efad82f935b1f8c6b43af
 ```
 
 ## Building and installing [Text_view for range-v3][Text_view-range-v3]
