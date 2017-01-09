@@ -571,7 +571,7 @@ auto make_text_view(
 // The initial encoding state is inferred from the first iterator.
 template<typename TIT, typename TST, typename ET = encoding_type_t<TIT>,
 CONCEPT_REQUIRES_(
-    TextIterator<TIT>(),
+    TextInputIterator<TIT>(),
     TextSentinel<TST, TIT>())>
 auto make_text_view(
     TIT first,

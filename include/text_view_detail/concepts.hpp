@@ -374,9 +374,6 @@ struct TextIterator
     auto requires_(T &&) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                Character, ranges::iterator_value_t<T>
-            >(),
-            ranges::concepts::model_of<
                 TextEncoding, encoding_type_t<T>
             >(),
             ranges::concepts::model_of<
@@ -420,7 +417,10 @@ struct TextSentinel
 /*
  * Text output iterator concept
  */
-struct TextOutputIterator {
+struct TextOutputIterator
+    : ranges::concepts::refines<
+          TextIterator>
+{
     template<typename T>
     const T ct() noexcept;
 
@@ -431,23 +431,7 @@ struct TextOutputIterator {
                 ranges::concepts::OutputIterator,
                     T,
                     character_type_t<encoding_type_t<T>>
-            >(),
-            ranges::concepts::model_of<
-                TextEncoding, encoding_type_t<T>
-            >(),
-            ranges::concepts::model_of<
-                TextEncodingState, typename T::state_type
-            >(),
-            ranges::concepts::convertible_to<
-                const typename encoding_type_t<T>::state_type&
-            >(
-                ct<T>().state()
-            ),
-            ranges::concepts::is_true(
-                std::integral_constant<bool,
-                    noexcept(ct<T>().state())
-                >{}
-            )
+            >()
         )
     );
 };
@@ -461,6 +445,14 @@ struct TextInputIterator
           TextIterator,
           ranges::concepts::InputIterator>
 {
+    template<typename T>
+    auto requires_(T &&) -> decltype(
+        ranges::concepts::valid_expr(
+            ranges::concepts::model_of<
+                Character, ranges::iterator_value_t<T>
+            >()
+        )
+    );
 };
 
 
