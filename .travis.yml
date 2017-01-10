@@ -30,21 +30,21 @@ matrix:
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=DEBUG
 
-    # Linux, clang 3.9:
+    # Linux, clang 3.6:
     - os: linux
-      addons: &clang39
+      addons: &clang36
         apt:
           packages:
-            - clang-3.9
+            - clang-3.6
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.9
+            - llvm-toolchain-precise-3.6
       compiler: clang
-      env: COMPILER=clang++-3.9 BUILD_TYPE=RELEASE
+      env: COMPILER=clang++-3.6 BUILD_TYPE=RELEASE
     - os: linux
-      addons: *clang39
+      addons: *clang36
       compiler: clang
-      env: COMPILER=clang++-3.9 BUILD_TYPE=DEBUG
+      env: COMPILER=clang++-3.6 BUILD_TYPE=DEBUG
 
     # Mac OS X, clang (default version):
     - os: osx
