@@ -7,24 +7,51 @@
 sudo: false
 language: cpp
 
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - g++-6
-
 matrix:
   include:
+    # Last known good range-v3 commit:
     - os: linux
+      addons: &gcc6
+        apt:
+          packages:
+            - g++-6
+          sources:
+            - ubuntu-toolchain-r-test
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=RELEASE BUILD_LAST_KNOWN_GOOD_RANGE_V3=1
+
+    # Linux, gcc 6:
     - os: linux
+      addons: *gcc6
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=RELEASE
     - os: linux
+      addons: *gcc6
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=DEBUG
+
+    # Linux, clang 3.9:
+    - os: linux
+      addons: &clang39
+        apt:
+          packages:
+            - clang-3.9
+          sources:
+            - llvm-toolchain-precise
+      compiler: clang
+      env: COMPILER=clang++-3.9 BUILD_TYPE=RELEASE
+    - os: linux
+      addons: *clang39
+      compiler: clang
+      env: COMPILER=clang++-3.9 BUILD_TYPE=DEBUG
+
+    # Mac OS X, clang (default version):
+    - os: osx
+      compiler: clang
+      env: COMPILER=clang++ BUILD_TYPE=DEBUG
+    - os: osx
+      compiler: clang
+      env: COMPILER=clang++ BUILD_TYPE=DEBUG
 
 cache:
   directories:
