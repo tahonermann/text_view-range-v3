@@ -1659,7 +1659,7 @@ void test_text_view() {
 
     // Underlying code unit containers.
     static const char cstr[] = "text";
-    static const array<char, 4> ary{ 't', 'e', 'x', 't' };
+    static const array<char, 4> ary{ { 't', 'e', 'x', 't' } };
     static const string str{"text"};
     static const auto il = { 't', 'e', 'x', 't' }; // std::initializer_list<char>.
 
@@ -1705,7 +1705,7 @@ void test_wtext_view() {
 
     // Underlying code unit containers.
     static const wchar_t cstr[] = L"text";
-    static const array<wchar_t, 4> ary{ L't', L'e', L'x', L't' };
+    static const array<wchar_t, 4> ary{ { L't', L'e', L'x', L't' } };
     static const wstring str{L"text"};
     static const auto il = { L't', L'e', L'x', L't' }; // std::initializer_list<wchar_t>.
 
@@ -1753,7 +1753,7 @@ void test_u8text_view() {
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
     static const char cstr[] = u8"text";
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static const array<char, 4> ary{ u8"t"[0], u8"e"[0], u8"x"[0], u8"t"[0] };
+    static const array<char, 4> ary{ { u8"t"[0], u8"e"[0], u8"x"[0], u8"t"[0] } };
     static const string str{u8"text"};
     // FIXME: If P0482 were to be adopted, replace char with char8_t.
     static const auto il = { u8"t"[0], u8"e"[0], u8"x"[0], u8"t"[0] }; // std::initializer_list<char>.
@@ -1804,7 +1804,7 @@ void test_u16text_view() {
 
     // Underlying code unit containers.
     static const char16_t cstr[] = u"text";
-    static const array<char16_t, 4> ary{ u't', u'e', u'x', u't' };
+    static const array<char16_t, 4> ary{ { u't', u'e', u'x', u't' } };
     static const u16string str{u"text"};
     static const auto il = { u't', u'e', u'x', u't' }; // std::initializer_list<char16_t>.
 
@@ -1850,7 +1850,7 @@ void test_u32text_view() {
 
     // Underlying code unit containers.
     static const char32_t cstr[] = U"text";
-    static const array<char32_t, 4> ary{ U't', U'e', U'x', U't' };
+    static const array<char32_t, 4> ary{ { U't', U'e', U'x', U't' } };
     static const u32string str{U"text"};
     static const auto il = { U't', U'e', U'x', U't' }; // std::initializer_list<char32_t>.
 
