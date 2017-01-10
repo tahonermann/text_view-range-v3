@@ -40,7 +40,7 @@ install:
   - export PATH="$TRAVIS_BUILD_DIR/cache/cmake/bin:$PATH"
   - |
     if [ "!" -f cache/last_known_good_range_v3_commit ]; then
-      echo "5c1c78466bee12675c7efad82f935b1f8c6b43af" > cache/last_known_good_range_v3_commit
+      echo "4974096d68642a0e55b6aa700909dd1fe5cf6661" > cache/last_known_good_range_v3_commit
     fi
   - travis_retry git clone https://github.com/ericniebler/range-v3.git range-v3
   - |

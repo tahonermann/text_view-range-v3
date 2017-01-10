@@ -145,11 +145,8 @@ public:
     auto operator*() -> output_iterator& {
         return *this;
     }
-    // FIXME: The range-v3 Writable iterator concept requires operator= to return non-void
-    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/4
-    const T& operator=(const T& t) {
+    void operator=(const T& t) {
         *it = t;
-        return *it;
     }
 
     auto operator++() -> output_iterator& {
