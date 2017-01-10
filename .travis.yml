@@ -37,7 +37,7 @@ matrix:
           packages:
             - clang-3.9
           sources:
-            - llvm-toolchain-precise
+            - llvm-toolchain-precise-3.9
       compiler: clang
       env: COMPILER=clang++-3.9 BUILD_TYPE=RELEASE
     - os: linux
