@@ -37,6 +37,7 @@ matrix:
           packages:
             - clang-3.9
           sources:
+            - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.9
       compiler: clang
       env: COMPILER=clang++-3.9 BUILD_TYPE=RELEASE
