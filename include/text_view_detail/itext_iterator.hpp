@@ -68,14 +68,7 @@ private:
 
 
 // Primary class template is incomplete.
-template<typename ET, typename VT, typename Enable = void,
-CONCEPT_REQUIRES_(
-    TextEncoding<ET>(),
-    ranges::View<VT>(),
-    TextDecoder<
-        ET,
-        ranges::range_iterator_t<
-            typename std::add_const<VT>::type>>())>
+template<typename ET, typename VT, typename Enable = void>
 class itext_cursor_data;
 
 // Specialization for input views.
@@ -84,6 +77,12 @@ class itext_cursor_data<
           ET,
           VT,
           typename std::enable_if<
+              (bool)TextEncoding<ET>() &&
+              (bool)ranges::View<VT>() &&
+              (bool)TextDecoder<
+                  ET,
+                  ranges::range_iterator_t<
+                      typename std::add_const<VT>::type>>() &&
               ! (bool)TextForwardDecoder<
                           ET,
                           ranges::range_iterator_t<
@@ -125,6 +124,8 @@ class itext_cursor_data<
           ET,
           VT,
           typename std::enable_if<
+              (bool)TextEncoding<ET>() &&
+              (bool)ranges::View<VT>() &&
               (bool)TextForwardDecoder<
                   ET,
                   ranges::range_iterator_t<

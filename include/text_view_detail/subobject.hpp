@@ -18,32 +18,24 @@ inline namespace text {
 namespace text_detail {
 
 
-enum class subobject_specialization {
-    base,
-    member
-};
-
-template<typename T>
-constexpr subobject_specialization
-select_subobject_specialization() noexcept {
-    return std::is_class<T>::value
-#if __cplusplus >= 201402L
-               && ! std::is_final<T>::value
-#endif
-           ? subobject_specialization::base
-           : subobject_specialization::member;
-}
-
-
 // Primary class template is incomplete.
-template<typename T,
-subobject_specialization = select_subobject_specialization<T>(),
-CONCEPT_REQUIRES_(ranges::SemiRegular<T>())>
+template<typename T, typename Enable = void>
 class subobject;
 
 // Specialization for embedding as a data member.
 template<typename T>
-class subobject<T, subobject_specialization::member> {
+class subobject<
+          T,
+          typename std::enable_if<
+              (bool)ranges::SemiRegular<T>()
+              && (
+                  ! std::is_class<T>::value
+#if __cplusplus >= 201402L
+                  || std::is_final<T>::value
+#endif
+              )
+          >::type>
+{
 public:
     constexpr subobject() = default;
 
@@ -71,7 +63,17 @@ private:
 
 // Specialization for embedding as a base class.
 template<typename T>
-class subobject<T, subobject_specialization::base>
+class subobject<
+          T,
+          typename std::enable_if<
+              (bool)ranges::SemiRegular<T>()
+              && (
+                  std::is_class<T>::value
+#if __cplusplus >= 201402L
+                  && std::is_final<T>::value
+#endif
+              )
+          >::type>
     : public T
 {
 public:

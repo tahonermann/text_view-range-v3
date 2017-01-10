@@ -59,8 +59,7 @@ namespace text_detail {
 //  }
 
 
-template<typename I, typename Enable = void,
-CONCEPT_REQUIRES_(ranges::Iterator<I>())>
+template<typename I, typename Enable = void>
 class iterator_preserve;
 
 // This iterator_preserve class template specialization provides functionality
@@ -69,7 +68,9 @@ class iterator_preserve;
 template<typename I>
 class iterator_preserve<
           I,
-          typename std::enable_if<! (bool)ranges::ForwardIterator<I>()>::type>
+          typename std::enable_if<
+              (bool)ranges::Iterator<I>() &&
+              ! (bool)ranges::ForwardIterator<I>()>::type>
 {
 public:
     iterator_preserve(I &i) noexcept : preserved(i) {}
@@ -94,7 +95,8 @@ private:
 template<typename I>
 class iterator_preserve<
           I,
-          typename std::enable_if<(bool)ranges::ForwardIterator<I>()>::type>
+          typename std::enable_if<
+              (bool)ranges::ForwardIterator<I>()>::type>
 {
 public:
     iterator_preserve(I &i)
