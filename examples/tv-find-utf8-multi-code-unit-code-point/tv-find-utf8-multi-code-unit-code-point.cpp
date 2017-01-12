@@ -39,9 +39,7 @@ int main() {
     assert(ti != end(a_utf8_tv));
 
     // Validate that the code point has the expected value.
-    // FIXME: itext_iterator lacks support for operator->
-    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/1
-    assert((*ti).get_code_point() == 0x00F8);
+    assert(ti->get_code_point() == 0x00F8);
     
     // Validate that the underlying code unit range is as expected.  Note that
     // the comparison is against code unit values expressed as character

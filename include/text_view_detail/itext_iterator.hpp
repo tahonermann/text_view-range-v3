@@ -294,8 +294,6 @@ public:
         return value;
     }
 
-    // FIXME: itext_iterator lacks support for operator->
-    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/1
     pointer arrow() const noexcept {
         return &value;
     }

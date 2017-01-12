@@ -74,7 +74,7 @@ install:
     fi
   - |
     if [ "!" -f cache/last_known_good_range_v3_commit ]; then
-      echo "4974096d68642a0e55b6aa700909dd1fe5cf6661" > cache/last_known_good_range_v3_commit
+      echo "bc42d4f1a6a350223ea01380e45c9c450a734707" > cache/last_known_good_range_v3_commit
     fi
   - travis_retry git clone https://github.com/ericniebler/range-v3.git range-v3
   - |
