@@ -13,6 +13,9 @@ find_package(text_view_range_v3 REQUIRED)
 add_executable(
   tv-find-utf8-multi-code-unit-code-point
   tv-find-utf8-multi-code-unit-code-point.cpp)
+set_target_properties(
+  tv-find-utf8-multi-code-unit-code-point
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
   tv-find-utf8-multi-code-unit-code-point
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})

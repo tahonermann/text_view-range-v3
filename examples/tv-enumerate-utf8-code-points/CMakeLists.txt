@@ -13,6 +13,9 @@ find_package(text_view_range_v3 REQUIRED)
 add_executable(
   tv-enumerate-utf8-code-points
   tv-enumerate-utf8-code-points.cpp)
+set_target_properties(
+  tv-enumerate-utf8-code-points
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
   tv-enumerate-utf8-code-points
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})

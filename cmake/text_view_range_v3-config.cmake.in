@@ -19,10 +19,10 @@ if(NOT Range-v3_FOUND)
   find_package(Range-v3 MODULE REQUIRED)
 endif()
 
-# FIXME: Use of the CMake compiler features support would be more appropriate
-# FIXME: here.
+set(text_view_range_v3_PROPERTIES
+      ${RANGE_V3_PROPERTIES})
+
 set(text_view_range_v3_COMPILE_OPTIONS
-      -std=c++11
       ${RANGE_V3_COMPILE_OPTIONS})
 
 set(text_view_range_v3_DEFINITIONS

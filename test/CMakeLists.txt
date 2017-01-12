@@ -13,6 +13,9 @@ find_package(text_view_range_v3 REQUIRED)
 add_executable(
   test-text-view
   test-text_view.cpp)
+set_target_properties(
+  test-text-view
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
   test-text-view
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
@@ -31,6 +34,9 @@ add_test(
 add_executable(
   test-subobject
   test-subobject.cpp)
+set_target_properties(
+  test-subobject
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
   test-subobject
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})

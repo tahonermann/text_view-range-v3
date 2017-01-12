@@ -13,6 +13,9 @@ find_package(text_view_range_v3 REQUIRED)
 add_executable(
   tv-dump
   tv-dump.cpp)
+set_target_properties(
+  tv-dump
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
   tv-dump
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})

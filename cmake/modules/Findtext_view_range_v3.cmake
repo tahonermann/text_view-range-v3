@@ -8,6 +8,7 @@
 # package in the event of multiple find_package invocations, especially in
 # different directories.
 get_property(text_view_range_v3_FOUND GLOBAL PROPERTY text_view_range_v3_FOUND)
+get_property(text_view_range_v3_PROPERTIES GLOBAL PROPERTY text_view_range_v3_PROPERTIES)
 get_property(text_view_range_v3_COMPILE_OPTIONS GLOBAL PROPERTY text_view_range_v3_COMPILE_OPTIONS)
 get_property(text_view_range_v3_DEFINITIONS GLOBAL PROPERTY text_view_range_v3_DEFINITIONS)
 get_property(text_view_range_v3_INCLUDE_DIRS GLOBAL PROPERTY text_view_range_v3_INCLUDE_DIRS)
@@ -22,12 +23,17 @@ if(NOT RANGE_V3_FOUND)
   find_package(Range-v3 MODULE REQUIRED)
 endif()
 
-# FIXME: Use of the CMake compiler features support would be more appropriate
-# FIXME: here.
+set(text_view_range_v3_PROPERTIES
+      ${RANGE_V3_PROPERTIES})
+set_property(GLOBAL PROPERTY text_view_range_v3_PROPERTIES ${text_view_range_v3_PROPERTIES})
+
 set(text_view_range_v3_COMPILE_OPTIONS
-      ${RANGE_V3_COMPILE_OPTIONS}
-      -std=c++11
-      -Wall -Werror -Wpedantic)
+      ${RANGE_V3_COMPILE_OPTIONS})
+if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
+   (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+  set(text_view_range_v3_COMPILE_OPTIONS
+      ${text_view_range_v3_COMPILE_OPTIONS} -Wall -Werror -Wpedantic)
+endif()
 set_property(GLOBAL PROPERTY text_view_range_v3_COMPILE_OPTIONS ${text_view_range_v3_COMPILE_OPTIONS})
 
 set(text_view_range_v3_DEFINITIONS
