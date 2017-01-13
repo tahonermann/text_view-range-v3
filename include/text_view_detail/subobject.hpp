@@ -70,7 +70,7 @@ class subobject<
               && (
                   std::is_class<T>::value
 #if __cplusplus >= 201402L
-                  && std::is_final<T>::value
+                  && ! std::is_final<T>::value
 #endif
               )
           >::type>
