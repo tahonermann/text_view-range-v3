@@ -29,8 +29,8 @@ set_property(GLOBAL PROPERTY text_view_range_v3_PROPERTIES ${text_view_range_v3_
 
 set(text_view_range_v3_COMPILE_OPTIONS
       ${RANGE_V3_COMPILE_OPTIONS})
-if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
-   (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+if(("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xGNU") OR
+   ("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xClang"))
   set(text_view_range_v3_COMPILE_OPTIONS
       ${text_view_range_v3_COMPILE_OPTIONS} -Wall -Werror -Wpedantic)
 endif()
