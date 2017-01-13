@@ -34,6 +34,10 @@ if(("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xGNU") OR
   set(text_view_range_v3_COMPILE_OPTIONS
       ${text_view_range_v3_COMPILE_OPTIONS} -Wall -Werror -Wpedantic)
 endif()
+if(("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xGNU") AND CYGWIN)
+  set(text_view_range_v3_COMPILE_OPTIONS
+      ${text_view_range_v3_COMPILE_OPTIONS} -Wa,-mbig-obj)
+endif()
 set_property(GLOBAL PROPERTY text_view_range_v3_COMPILE_OPTIONS ${text_view_range_v3_COMPILE_OPTIONS})
 
 set(text_view_range_v3_DEFINITIONS
