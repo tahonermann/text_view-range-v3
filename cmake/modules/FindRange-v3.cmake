@@ -28,8 +28,18 @@ set(RANGE_V3_INCLUDE_DIRS ${RANGE_V3_INCLUDE_DIRS})
 unset(RANGE_V3_INCLUDE_DIRS CACHE)
 
 if(RANGE_V3_INCLUDE_DIRS)
+  if(("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xClang") AND
+     ("x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC"))
+    # Clang/C2 requires -std=c++14 to parse some of the Microsoft provided
+    # standard library headers.
+    set(RANGE_V3_PROPERTIES
+        CXX_STANDARD 14)
+  else()
+    set(RANGE_V3_PROPERTIES
+        CXX_STANDARD 11)
+  endif()
   set(RANGE_V3_PROPERTIES
-      CXX_STANDARD 11
+      ${RANGE_V3_PROPERTIES}
       CXX_STANDARD_REQUIRED ON
       CXX_EXTENSIONS OFF)
   set_property(GLOBAL PROPERTY RANGE_V3_PROPERTIES ${RANGE_V3_PROPERTIES})
