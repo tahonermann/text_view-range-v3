@@ -290,7 +290,7 @@ public:
         return ok;
     }
 
-    reference get() const noexcept {
+    reference read() const noexcept {
         return value;
     }
 

@@ -49,14 +49,14 @@ class otext_cursor
         post_increment_proxy& operator=(
             const state_transition_type &stt)
         {
-            self.set(stt);
+            self.write(stt);
             return *this;
         }
 
         post_increment_proxy& operator=(
             const character_type_t<encoding_type> &value)
         {
-            self.set(value);
+            self.write(value);
             return *this;
         }
 
@@ -119,7 +119,7 @@ public:
         return base_type::get();
     }
 
-    void set(const state_transition_type &stt) {
+    void write(const state_transition_type &stt) {
         // Preserve current so that it remains unmutated in the event that
         // encode_state_transition() throws an exception (unless it is an
         // actual output iterator).
@@ -130,7 +130,7 @@ public:
         preserved_current.update();
     }
 
-    void set(const character_type_t<encoding_type> &value) {
+    void write(const character_type_t<encoding_type> &value) {
         // Preserve current so that it remains unmutated in the event that
         // encode_state_transition() throws an exception (unless it is an
         // actual output iterator).
