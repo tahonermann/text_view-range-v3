@@ -14,7 +14,7 @@ cache:
 environment:
   RANGE_V3_INSTALL_PATH: C:\range-v3
   matrix:
-    - BUILD_LAST_KNOWN_GOOD_RANGE_V3: 1
+    - BUILD_LAST_KNOWN_GOOD_RANGE_V3: bab29767cce120e11872d79a2537bc6f0be76963
     - BUILD_RANGE_V3_HEAD: 1
 
 platform:
@@ -35,15 +35,11 @@ install:
         7z x -y cmake-3.6.1-win32-x86.zip
         popd
       }
-  - ps: |
-      if (![IO.File]::Exists("C:\cache\last_known_good_range_v3_commit")) {
-        echo "bab29767cce120e11872d79a2537bc6f0be76963" > C:\cache\last_known_good_range_v3_commit
-      }
   - git clone https://github.com/ericniebler/range-v3.git C:\range-v3
   - ps: |
       if (Test-Path env:BUILD_LAST_KNOWN_GOOD_RANGE_V3) {
         pushd C:\range-v3
-        git checkout $(type C:\cache\last_known_good_range_v3_commit)
+        git checkout $env:BUILD_LAST_KNOWN_GOOD_RANGE_V3
         popd
       }
   - mkdir build && cd build
@@ -56,13 +52,5 @@ build:
 
 test_script:
   - C:\cache\cmake-3.6.1-win32-x86\bin\ctest -C %CONFIGURATION%
-
-on_success:
-  - ps: |
-      if (-not (Test-Path env:BUILD_LAST_KNOWN_GOOD_RANGE_V3)) {
-        pushd C:\range-v3
-        git rev-parse HEAD > C:\cache\last_known_good_range_v3_commit
-        popd
-      }
 
 deploy: off
