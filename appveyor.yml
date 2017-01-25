@@ -15,6 +15,7 @@ environment:
   RANGE_V3_INSTALL_PATH: C:\range-v3
   matrix:
     - BUILD_LAST_KNOWN_GOOD_RANGE_V3: 1
+    - BUILD_RANGE_V3_HEAD: 1
 
 platform:
   - x86
@@ -49,7 +50,7 @@ install:
   - C:\cache\cmake-3.6.1-win32-x86\bin\cmake .. -T v140_clang_c2
 
 build:
-  project: C:\projects\text_view-range-v3\build\ALL_BUILD.vcxproj
+  project: C:\projects\text-view-range-v3\build\ALL_BUILD.vcxproj
   parallel: true
   verbosity: minimal
 
