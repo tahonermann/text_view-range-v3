@@ -12,8 +12,8 @@ cache:
   - C:\cache -> appveyor.yml
 
 environment:
-  - RANGE_V3_INSTALL_PATH: C:\range-v3
-  - matrix:
+  RANGE_V3_INSTALL_PATH: C:\range-v3
+  matrix:
     - BUILD_LAST_KNOWN_GOOD_RANGE_V3: 1
 
 platform:
