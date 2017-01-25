@@ -18,7 +18,9 @@ matrix:
           sources:
             - ubuntu-toolchain-r-test
       compiler: gcc
-      env: COMPILER=g++-6 BUILD_TYPE=RELEASE BUILD_LAST_KNOWN_GOOD_RANGE_V3=1
+      env: COMPILER=g++-6
+           BUILD_TYPE=RELEASE
+           LAST_KNOWN_GOOD_RANGE_V3=bab29767cce120e11872d79a2537bc6f0be76963
 
     # Linux, gcc 6:
     - os: linux
@@ -72,14 +74,10 @@ install:
         brew install cmake
       fi
     fi
-  - |
-    if [ "!" -f cache/last_known_good_range_v3_commit ]; then
-      echo "bab29767cce120e11872d79a2537bc6f0be76963" > cache/last_known_good_range_v3_commit
-    fi
   - travis_retry git clone https://github.com/ericniebler/range-v3.git range-v3
   - |
-    if [ -n "$BUILD_LAST_KNOWN_GOOD_RANGE_V3" ]; then
-      git -C range-v3 checkout $(cat cache/last_known_good_range_v3_commit)
+    if [ -n "$LAST_KNOWN_GOOD_RANGE_V3" ]; then
+      git -C range-v3 checkout $LAST_KNOWN_GOOD_RANGE_V3
     fi
   - export RANGE_V3_INSTALL_PATH="$TRAVIS_BUILD_DIR/range-v3"
 
@@ -97,9 +95,3 @@ script:
   - mkdir build
   - (cd build && cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..)
   - (cd build && cmake --build . --config "$BUILD_TYPE" --target check-install)
-
-after_success:
-  - |
-    if [ -z "$BUILD_LAST_KNOWN_GOOD_RANGE_V3" ]; then
-      git -C range-v3 rev-parse HEAD > cache/last_known_good_range_v3_commit
-    fi
