@@ -1,4 +1,8 @@
 Travis CI Build Status: [![Travis Build Status](https://travis-ci.org/tahonermann/text_view-range-v3.svg?branch=master)](https://travis-ci.org/tahonermann/text_view-range-v3)
+(Linux:gcc, Linux:clang, Mac OS X:clang)
+
+AppVeyor CI Build Status: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qsfqip1v7632uvgt?svg=true)](https://ci.appveyor.com/project/tahonermann/text-view-range-v3)
+(Windows:Clang/C2)
 
 # The port of [Text_view] to [range-v3] is a work in progress!
 
