@@ -1,13 +1,8 @@
-Travis CI Build Status: [![Travis Build Status](https://travis-ci.org/tahonermann/text_view-range-v3.svg?branch=master)](https://travis-ci.org/tahonermann/text_view-range-v3)
-(Linux:gcc, Linux:clang, Mac OS X:clang)
+[![Travis Build Status](https://travis-ci.org/tahonermann/text_view-range-v3.svg?branch=master)](https://travis-ci.org/tahonermann/text_view-range-v3)
+Travis CI (Linux:gcc, Linux:clang, Mac OS X:clang)
 
-AppVeyor CI Build Status: [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qsfqip1v7632uvgt?svg=true)](https://ci.appveyor.com/project/tahonermann/text-view-range-v3)
-(Windows:Clang/C2)
-
-# The port of [Text_view] to [range-v3] is a work in progress!
-
-This documentation is preliminary.  [Text_view] does not yet build with
-[range-v3].  Please check back later!
+[![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qsfqip1v7632uvgt?svg=true)](https://ci.appveyor.com/project/tahonermann/text-view-range-v3)
+AppVeyor CI (Windows:Clang/C2)
 
 # [Text_view for range-v3][Text_view-range-v3]
 A [range-v3] based character encoding and code point enumeration library.
