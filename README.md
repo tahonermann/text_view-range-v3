@@ -4,6 +4,8 @@ Travis CI (Linux:gcc, Linux:clang, Mac OS X:clang)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qsfqip1v7632uvgt?svg=true)](https://ci.appveyor.com/project/tahonermann/text-view-range-v3)
 AppVeyor CI (Windows:Clang/C2)
 
+[![Coverity Scan status](https://scan.coverity.com/projects/11588/badge.svg)](https://scan.coverity.com/projects/tahonermann-text_view-range-v3)
+
 # [Text_view for range-v3][Text_view-range-v3]
 A [range-v3] based character encoding and code point enumeration library.
 

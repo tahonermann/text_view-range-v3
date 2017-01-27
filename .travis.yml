@@ -7,6 +7,11 @@
 sudo: false
 language: cpp
 
+env:
+  global:
+   # encrypted COVERITY_SCAN_TOKEN:
+   - secure: "D9N0aj5XBLXVRru7yF1/TXvEuejKwe0XPyY/S756p3l5hM+bQPeAqDfD3f1vvjx3HA9sTrxFHRnj1MNK81Eeed/w6zzrdl09ufVf/AxxzpHQWlCdNK+5p3PKrOOfOW1IugjzVq/ScV2KlW+teZ3vKr5Csfbqk4fi9ER3JYGJ8DZaShvKsYrXYhPOlSOgNYYIoorhtB3sNHHYUwC83tJ97kHSSOSrWc5xDXGiEJVwgKd1AbOJwuTVIp9bIzLWJmmJBR4k3WsrSlrYvchAZF9mvk3qmk11FuW1pfTmtOS1CAklkTLRjfAM83b5wgUBiwEXFESn+Nwx3rWvAsdoHCUOsDJyS3oX6UR0T0r087GCOh4dOo+Yv6HMU/oM/7pxIs28q1eoi3Sh0XCKbA8JlSraL65RM7puD1OOR8sXyJCj4p3xkKsd/IkbYCdkrlkGtv3mztLWzDLQRVTBpz5VpSloC0p0GX3ISUzL3YlJbjPAfPYF2qsMOOI4GWnmp0QnicS/hHaePmjYAQ2LdYw4R3mEaRCnjeZ4+zvWE0c/ku4QebXoSuHWFP4wIXArvCyIticBXxmn1GI3bjK4d3V09j+i6OpQJi/a6UpEeSW1jyrikIK2vnhjmFSiv0mvwF7xNb9drvwVuZU659pEl/rD5ZMYWy+q4wzK49fw2AMCrSRjoZE="
+
 matrix:
   include:
     # Last known good range-v3 commit:
@@ -60,6 +65,22 @@ cache:
   directories:
     - cache
 
+addons:
+  coverity_scan:
+    project:
+      name: "tahonermann/text_view-range-v3"
+      description: "A range-v3 based character encoding and code point enumeration library"
+    notification_email: tom@honermann.net
+    build_command_prepend: "mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
+    build_command: "cd build && cmake --build . --config RELEASE"
+    branch_pattern: coverity_scan
+
+before_install:
+  - |
+    if [ -n "${COVERITY_SCAN_BRANCH}" ]; then
+      echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
+    fi
+
 install:
   - |
     if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
@@ -92,6 +113,11 @@ before_script:
   - "echo \"range-v3 commit: $(git -C range-v3 rev-parse HEAD)\""
 
 script:
+  - |
+    if [ -n "${COVERITY_SCAN_BRANCH}" ]; then
+      echo "Skipping regular build since Coverity Scan is active"
+      exit 0
+    fi
   - mkdir build
   - (cd build && cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..)
   - (cd build && cmake --build . --config "$BUILD_TYPE" --target check-install)
