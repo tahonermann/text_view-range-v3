@@ -61,7 +61,7 @@ before_script:
   - echo "CXX=$CXX"
   - which $CXX
   - $CXX --version
-  - echo "range-v3 commit: $(git -C range-v3 rev-parse HEAD)"
+  - "echo \"range-v3 commit: $(git -C range-v3 rev-parse HEAD)\""
 
 script:
   - echo "Skipping regular build since Coverity Scan is active"
