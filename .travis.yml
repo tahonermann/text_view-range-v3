@@ -14,72 +14,27 @@ env:
 
 matrix:
   include:
-    # Last known good range-v3 commit:
     - os: linux
-      addons: &gcc6
+      addons:
         apt:
           packages:
             - g++-6
           sources:
             - ubuntu-toolchain-r-test
-      compiler: gcc
-      env: COMPILER=g++-6
-           BUILD_TYPE=RELEASE
-           LAST_KNOWN_GOOD_RANGE_V3=bab29767cce120e11872d79a2537bc6f0be76963
-
-    # Linux, gcc 6:
-    - os: linux
-      addons: *gcc6
+        coverity_scan:
+          project:
+            name: "tahonermann/text_view-range-v3"
+            description: "A range-v3 based character encoding and code point enumeration library"
+          notification_email: tom@honermann.net
+          build_command_prepend: "mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
+          build_command: "cd build && cmake --build . --config RELEASE"
+          branch_pattern: coverity_scan
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=RELEASE
-    - os: linux
-      addons: *gcc6
-      compiler: gcc
-      env: COMPILER=g++-6 BUILD_TYPE=DEBUG
-
-    # Linux, clang 3.6:
-    - os: linux
-      addons: &clang36
-        apt:
-          packages:
-            - clang-3.6
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-precise-3.6
-      compiler: clang
-      env: COMPILER=clang++-3.6 BUILD_TYPE=RELEASE
-    - os: linux
-      addons: *clang36
-      compiler: clang
-      env: COMPILER=clang++-3.6 BUILD_TYPE=DEBUG
-
-    # Mac OS X, clang (default version):
-    - os: osx
-      compiler: clang
-      env: COMPILER=clang++ BUILD_TYPE=RELEASE
-    - os: osx
-      compiler: clang
-      env: COMPILER=clang++ BUILD_TYPE=DEBUG
 
 cache:
   directories:
     - cache
-
-addons:
-  coverity_scan:
-    project:
-      name: "tahonermann/text_view-range-v3"
-      description: "A range-v3 based character encoding and code point enumeration library"
-    notification_email: tom@honermann.net
-    build_command_prepend: "mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
-    build_command: "cd build && cmake --build . --config RELEASE"
-    branch_pattern: coverity_scan
-
-before_install:
-  - |
-    if [ -n "${COVERITY_SCAN_BRANCH}" ]; then
-      echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
-    fi
 
 install:
   - |
@@ -96,10 +51,6 @@ install:
       fi
     fi
   - travis_retry git clone https://github.com/ericniebler/range-v3.git range-v3
-  - |
-    if [ -n "$LAST_KNOWN_GOOD_RANGE_V3" ]; then
-      git -C range-v3 checkout $LAST_KNOWN_GOOD_RANGE_V3
-    fi
   - export RANGE_V3_INSTALL_PATH="$TRAVIS_BUILD_DIR/range-v3"
 
 before_script:
@@ -113,11 +64,4 @@ before_script:
   - "echo \"range-v3 commit: $(git -C range-v3 rev-parse HEAD)\""
 
 script:
-  - |
-    if [ -n "${COVERITY_SCAN_BRANCH}" ]; then
-      echo "Skipping regular build since Coverity Scan is active"
-      exit 0
-    fi
-  - mkdir build
-  - (cd build && cmake -DCMAKE_BUILD_TYPE="$BUILD_TYPE" ..)
-  - (cd build && cmake --build . --config "$BUILD_TYPE" --target check-install)
+  - echo "Skipping regular build since Coverity Scan is active"
