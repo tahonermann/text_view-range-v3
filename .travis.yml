@@ -18,19 +18,20 @@ matrix:
       addons:
         apt:
           packages:
-            - g++-6
+            - clang-3.6
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
         coverity_scan:
           project:
             name: "tahonermann/text_view-range-v3"
             description: "A range-v3 based character encoding and code point enumeration library"
           notification_email: tom@honermann.net
-          build_command_prepend: "cov-configure --template --compiler g++-6 --comptype gcc && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
+          build_command_prepend: "cov-configure --template --compiler clang++-3.6 --comptype clang && mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
           build_command: "cmake --build . --config RELEASE"
           branch_pattern: coverity_scan
-      compiler: gcc
-      env: COMPILER=g++-6 BUILD_TYPE=RELEASE
+      compiler: clang
+      env: COMPILER=clang++-3.6 BUILD_TYPE=RELEASE
 
 cache:
   directories:
