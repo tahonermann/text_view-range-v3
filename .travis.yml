@@ -26,8 +26,8 @@ matrix:
             name: "tahonermann/text_view-range-v3"
             description: "A range-v3 based character encoding and code point enumeration library"
           notification_email: tom@honermann.net
-          build_command_prepend: "sh -c 'mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE ..'"
-          build_command: "sh -c 'cd build && cmake --build . --config RELEASE'"
+          build_command_prepend: "mkdir build && cd build && cmake -DCMAKE_BUILD_TYPE=RELEASE .."
+          build_command: "cmake --build build --config RELEASE"
           branch_pattern: coverity_scan
       compiler: gcc
       env: COMPILER=g++-6 BUILD_TYPE=RELEASE
@@ -61,7 +61,11 @@ before_script:
   - echo "CXX=$CXX"
   - which $CXX
   - $CXX --version
-  - "echo \"range-v3 commit: $(git -C range-v3 rev-parse HEAD)\""
+  - echo "range-v3 commit: $(git -C range-v3 rev-parse HEAD)"
 
 script:
   - echo "Skipping regular build since Coverity Scan is active"
+
+after_script:
+  - echo "Coverity build log:"
+  - cat cov-int/build-log.txt
