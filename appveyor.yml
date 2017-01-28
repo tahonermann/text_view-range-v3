@@ -6,6 +6,10 @@
 
 shallow_clone: true
 
+branches:
+  except:
+    - coverity_scan
+
 image: Visual Studio 2015
 
 cache:
