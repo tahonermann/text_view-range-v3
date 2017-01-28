@@ -20,93 +20,35 @@ namespace experimental {
 inline namespace text {
 
 
-namespace text_detail {
-
+/*
+ * otext_iterator
+ */
 template<typename ET, typename CUIT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
-class otext_cursor
-    : private subobject<typename ET::state_type>
+class otext_iterator
+    : private text_detail::subobject<typename ET::state_type>
 {
-    using base_type = subobject<typename ET::state_type>;
-    using encoding_type = ET;
-    using iterator_type = CUIT;
-    using state_type = typename ET::state_type;
-    using state_transition_type = typename ET::state_transition_type;
-
-    class post_increment_proxy {
-        friend class otext_cursor;
-    public:
-        post_increment_proxy(otext_cursor& self) noexcept
-            : self(self)
-        {}
-
-        post_increment_proxy& operator*() noexcept {
-            return *this;
-        }
-
-        post_increment_proxy& operator=(
-            const state_transition_type &stt)
-        {
-            self.write(stt);
-            return *this;
-        }
-
-        post_increment_proxy& operator=(
-            const character_type_t<encoding_type> &value)
-        {
-            self.write(value);
-            return *this;
-        }
-
-    private:
-        otext_cursor& self;
-    };
+    using base_type = text_detail::subobject<typename ET::state_type>;
 
 public:
-    using difference_type = ranges::iterator_difference_t<iterator_type>;
+    using encoding_type = ET;
+    using state_type = typename ET::state_type;
+    using state_transition_type = typename ET::state_transition_type;
+    using iterator = CUIT;
+    using iterator_category = std::output_iterator_tag;
+    using value_type = character_type_t<encoding_type>;
+    using reference = value_type&;
+    using pointer = value_type*;
+    using difference_type = ranges::iterator_difference_t<iterator>;
 
-    class mixin
-        : protected ranges::basic_mixin<otext_cursor>
-    {
-        using base_type = ranges::basic_mixin<otext_cursor>;
-    public:
-        using encoding_type = typename otext_cursor::encoding_type;
-        using state_type = typename otext_cursor::state_type;
-        using state_transition_type = typename otext_cursor::state_transition_type;
+public:
+    otext_iterator() = default;
 
-        mixin() = default;
-
-        mixin(
-            state_type state,
-            iterator_type current)
-        :
-            base_type{otext_cursor{std::move(state), std::move(current)}}
-        {}
-
-        mixin(
-            const post_increment_proxy &p)
-        :
-            base_type{p.self}
-        {}
-
-        using base_type::base_type;
-
-        const state_type& state() const noexcept {
-            return this->get().state();
-        }
-
-        const iterator_type& base() const noexcept {
-            return this->get().current;
-        }
-    };
-
-    otext_cursor() = default;
-
-    otext_cursor(
+    otext_iterator(
         state_type state,
-        iterator_type current)
+        iterator current)
     :
         base_type{std::move(state)},
         current(std::move(current))
@@ -115,58 +57,57 @@ public:
     const state_type& state() const noexcept {
         return base_type::get();
     }
-    state_type& state() noexcept {
-        return base_type::get();
+
+    const iterator& base() const noexcept {
+        current;
     }
 
-    void write(const state_transition_type &stt) {
+    otext_iterator& operator*() const noexcept {
+        return *const_cast<otext_iterator*>(this);
+    }
+
+    otext_iterator& operator++() noexcept {
+        return *this;
+    }
+    otext_iterator& operator++(int) noexcept {
+        return *this;
+    }
+
+    otext_iterator& operator=(
+        const state_transition_type &stt)
+    {
         // Preserve current so that it remains unmutated in the event that
         // encode_state_transition() throws an exception (unless it is an
         // actual output iterator).
-        auto preserved_current = make_iterator_preserve(current);
+        auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
         encoding_type::encode_state_transition(
-            state(), preserved_current.get(), stt, encoded_code_units);
+            mutable_state(), preserved_current.get(), stt, encoded_code_units);
         preserved_current.update();
+        return *this;
     }
 
-    void write(const character_type_t<encoding_type> &value) {
+    otext_iterator& operator=(
+        const character_type_t<encoding_type> &value)
+    {
         // Preserve current so that it remains unmutated in the event that
         // encode_state_transition() throws an exception (unless it is an
         // actual output iterator).
-        auto preserved_current = make_iterator_preserve(current);
+        auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
         encoding_type::encode(
-            state(), preserved_current.get(), value, encoded_code_units);
+            mutable_state(), preserved_current.get(), value, encoded_code_units);
         preserved_current.update();
-    }
-
-    void next() noexcept
-    {}
-
-    // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
-    // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
-    // FIXME: ranges-v3 lacks support for post_increment().
-    post_increment_proxy post_increment() noexcept {
-        return post_increment_proxy{*this};
+        return *this;
     }
 
 private:
-    iterator_type current;
+    state_type& mutable_state() noexcept {
+        return base_type::get();
+    }
+
+    mutable iterator current;
 };
-
-} // namespace text_detail
-
-
-/*
- * otext_iterator
- */
-template<typename ET, typename CUIT,
-CONCEPT_REQUIRES_(
-    TextEncoding<ET>(),
-    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
-using otext_iterator =
-    ranges::basic_iterator<text_detail::otext_cursor<ET, CUIT>>;
 
 
 /*

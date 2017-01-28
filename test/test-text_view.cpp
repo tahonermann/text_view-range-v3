@@ -707,18 +707,10 @@ void test_forward_encode(
 {
     for (const auto &cum : code_unit_maps) {
         for (auto st : cum.state_transitions) {
-            // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
-            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
-            // *it++ = st;
-            *it = st;
-            it++;
+            *it++ = st;
         }
         for (auto c : cum.characters) {
-            // FIXME: otext_iterator post-increment operator++ does not preserve iterator state
-            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/2
-            // *it++ = c;
-            *it = c;
-            it++;
+            *it++ = c;
         }
     }
     auto code_unit_it = begin(code_unit_range);
@@ -808,11 +800,7 @@ void test_forward_decode(
         for (auto c : cum.characters) {
             // Decode and advance.
             assert(tvit != end(tv));
-            // FIXME: itext_iterator lacks support for dereference of post-incremented iterators
-            // FIXME: https://github.com/tahonermann/text_view-range-v3/issues/3
-            // auto tvcp = *tvit++;
-            auto tvcp = *tvit;
-            tvit++;
+            auto tvcp = *tvit++;
             // Validate the decoded character.
             assert(tvcp == c);
         }
