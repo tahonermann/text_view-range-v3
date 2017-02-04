@@ -92,6 +92,7 @@ get_character_set_info() {
     return *csi_ptr;
 }
 
+inline
 const character_set_info&
 get_character_set_info(
     character_set_id id)
