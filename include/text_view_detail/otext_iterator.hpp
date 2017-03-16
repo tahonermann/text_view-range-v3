@@ -114,7 +114,7 @@ private:
  * make_otext_iterator
  */
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and and an explicitly specified initial
+// encoding from an output iterator and an explicitly specified initial
 // encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
@@ -128,7 +128,7 @@ otext_iterator<ET, IT> make_otext_iterator(
 }
 
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and and an implicit initial encoding state.
+// encoding from an output iterator and an implicit initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
