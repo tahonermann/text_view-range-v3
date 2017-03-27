@@ -85,7 +85,7 @@ public:
     using view_type = VT;
     using state_type = typename encoding_type::state_type;
     using iterator =
-        ranges::range_iterator_t<
+        ranges::iterator_t<
             typename std::add_const<view_type>::type>;
     using iterator_category =
               text_detail::itext_iterator_category_t<
@@ -94,7 +94,7 @@ public:
     using value_type = character_type_t<encoding_type>;
     using reference = value_type;
     using pointer = typename std::add_const<value_type>::type*;
-    using difference_type = ranges::iterator_difference_t<iterator>;
+    using difference_type = ranges::difference_type_t<iterator>;
 
 protected:
     itext_iterator_base() = default;
@@ -130,11 +130,11 @@ class itext_iterator_data<
               (bool)ranges::View<VT>() &&
               (bool)TextDecoder<
                   ET,
-                  ranges::range_iterator_t<
+                  ranges::iterator_t<
                       typename std::add_const<VT>::type>>() &&
               ! (bool)TextForwardDecoder<
                           ET,
-                          ranges::range_iterator_t<
+                          ranges::iterator_t<
                               typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
 {
@@ -185,7 +185,7 @@ class itext_iterator_data<
               (bool)ranges::View<VT>() &&
               (bool)TextForwardDecoder<
                   ET,
-                  ranges::range_iterator_t<
+                  ranges::iterator_t<
                       typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
 {
@@ -259,7 +259,7 @@ CONCEPT_REQUIRES_(
     ranges::View<VT>(),
     TextDecoder<
         ET,
-        ranges::range_iterator_t<
+        ranges::iterator_t<
             typename std::add_const<VT>::type>>())>
 class itext_iterator
     : public text_detail::itext_iterator_data<ET, VT>

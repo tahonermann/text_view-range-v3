@@ -45,10 +45,10 @@ public:
     using view_type = VT;
     using state_type = typename ET::state_type;
     using code_unit_iterator =
-        ranges::range_iterator_t<
+        ranges::iterator_t<
             typename std::add_const<view_type>::type>;
     using code_unit_sentinel =
-        ranges::range_sentinel_t<
+        ranges::sentinel_t<
             typename std::add_const<view_type>::type>;
     using iterator = itext_iterator<ET, VT>;
     using sentinel = itext_sentinel<ET, VT>;
@@ -121,7 +121,7 @@ public:
     basic_text_view(
         state_type state,
         code_unit_iterator first,
-        ranges::iterator_difference_t<code_unit_iterator> n)
+        ranges::difference_type_t<code_unit_iterator> n)
     :
         base_type{std::move(state)},
         view{first, std::next(first, n)}
@@ -137,7 +137,7 @@ public:
             code_unit_iterator>())
     basic_text_view(
         code_unit_iterator first,
-        ranges::iterator_difference_t<code_unit_iterator> n)
+        ranges::difference_type_t<code_unit_iterator> n)
     :
         base_type{encoding_type::initial_state()},
         view{first, std::next(first, n)}
@@ -163,7 +163,7 @@ public:
     CONCEPT_REQUIRES_(
         ranges::Constructible<code_unit_iterator, const charT *>(),
         ranges::ConvertibleTo< // Allow narrowing conversions.
-            ranges::iterator_difference_t<code_unit_iterator>,
+            ranges::difference_type_t<code_unit_iterator>,
             typename basic_string<charT, traits, Allocator>::size_type>(),
         ranges::Constructible<
             view_type, code_unit_iterator, code_unit_sentinel>())>
@@ -173,7 +173,7 @@ public:
     :
         basic_text_view{std::move(state),
                         str.c_str(),
-                        ranges::iterator_difference_t<
+                        ranges::difference_type_t<
                             code_unit_iterator>(str.size())}
     {}
 
@@ -185,7 +185,7 @@ public:
     CONCEPT_REQUIRES_(
         ranges::Constructible<code_unit_iterator, const charT *>(),
         ranges::ConvertibleTo< // Allow narrowing conversions.
-            ranges::iterator_difference_t<code_unit_iterator>,
+            ranges::difference_type_t<code_unit_iterator>,
             typename basic_string<charT, traits, Allocator>::size_type>(),
         ranges::Constructible<
             view_type, code_unit_iterator, code_unit_sentinel>())>
@@ -193,7 +193,7 @@ public:
         const basic_string<charT, traits, Allocator> &str)
     :
         basic_text_view{str.c_str(),
-                        ranges::iterator_difference_t<
+                        ranges::difference_type_t<
                             code_unit_iterator>(str.size())}
     {}
 
@@ -209,7 +209,7 @@ public:
         ranges::InputRange<RT>(),
         ranges::Constructible<
             code_unit_iterator,
-            ranges::range_iterator_t<const RT>>(),
+            ranges::iterator_t<const RT>>(),
         ranges::Constructible<
             view_type,
             code_unit_iterator,
@@ -232,7 +232,7 @@ public:
         ranges::InputRange<RT>(),
         ranges::Constructible<
             code_unit_iterator,
-            ranges::range_iterator_t<const RT>>(),
+            ranges::iterator_t<const RT>>(),
         ranges::Constructible<
             view_type,
             code_unit_iterator,
@@ -358,7 +358,7 @@ auto make_text_view(
 // from an InputIterator and Sentinel pair, and an explicitly specified initial
 // encoding state.
 template<typename IT, typename ST, typename ET =
-         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+         default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
     ranges::InputIterator<IT>(),
     ranges::Sentinel<ST, IT>())>
@@ -397,7 +397,7 @@ auto make_text_view(
 // from an InputIterator and Sentinel pair, and an implicit initial encoding
 // state.
 template<typename IT, typename ST, typename ET =
-         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+         default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
     ranges::InputIterator<IT>(),
     ranges::Sentinel<ST, IT>())>
@@ -421,7 +421,7 @@ CONCEPT_REQUIRES_(
 auto make_text_view(
     typename ET::state_type state,
     IT first,
-    ranges::iterator_difference_t<IT> n)
+    ranges::difference_type_t<IT> n)
 -> decltype(text::make_text_view<ET>(std::move(state),
                                      std::move(first),
                                      std::move(std::next(first, n))))
@@ -436,13 +436,13 @@ auto make_text_view(
 // from a ForwardIterator and count pair, and an explicitly specified initial
 // encoding state.
 template<typename IT, typename ET =
-         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+         default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
     ranges::ForwardIterator<IT>())>
 auto make_text_view(
     typename ET::state_type state,
     IT first,
-    ranges::iterator_difference_t<IT> n)
+    ranges::difference_type_t<IT> n)
 -> decltype(text::make_text_view<ET>(std::move(state),
                                      std::move(first),
                                      std::move(std::next(first, n))))
@@ -462,7 +462,7 @@ CONCEPT_REQUIRES_(
     ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
-    ranges::iterator_difference_t<IT> n)
+    ranges::difference_type_t<IT> n)
 -> decltype(text::make_text_view<ET>(std::move(first),
                                      std::move(std::next(first, n))))
 {
@@ -475,12 +475,12 @@ auto make_text_view(
 // from a ForwardIterator and count pair, and an implicit initial encoding
 // state.
 template<typename IT, typename ET =
-         default_encoding_type_t<ranges::iterator_value_t<IT>>,
+         default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
     ranges::ForwardIterator<IT>())>
 auto make_text_view(
     IT first,
-    ranges::iterator_difference_t<IT> n)
+    ranges::difference_type_t<IT> n)
 -> decltype(text::make_text_view<ET>(std::move(first),
                                      std::move(std::next(first, n))))
 {
@@ -512,7 +512,7 @@ auto make_text_view(
 // from an InputRange const reference and an explicitly specified initial
 // encoding state.
 template<typename RT, typename ET =
-         default_encoding_type_t<ranges::range_value_t<RT>>,
+         default_encoding_type_t<ranges::range_value_type_t<RT>>,
 CONCEPT_REQUIRES_(
     ranges::InputRange<RT>())>
 auto make_text_view(
@@ -545,7 +545,7 @@ auto make_text_view(
 // Overload to construct a text view for an implicitly assumed encoding type
 // from an InputRange const reference and an implicit initial encoding state.
 template<typename RT, typename ET =
-         default_encoding_type_t<ranges::range_value_t<RT>>,
+         default_encoding_type_t<ranges::range_value_type_t<RT>>,
 CONCEPT_REQUIRES_(
     ranges::InputRange<RT>())>
 auto make_text_view(

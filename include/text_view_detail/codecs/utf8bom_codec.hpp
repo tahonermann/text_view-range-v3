@@ -158,7 +158,7 @@ public:
         CodeUnitIterator<CUIT>(),
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<
-            ranges::iterator_value_t<CUIT>,
+            ranges::value_type_t<CUIT>,
             typename std::make_unsigned<code_unit_type>::type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static bool decode(
@@ -205,7 +205,7 @@ public:
         CodeUnitIterator<CUIT>(),
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<
-            ranges::iterator_value_t<CUIT>,
+            ranges::value_type_t<CUIT>,
             typename std::make_unsigned<code_unit_type>::type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static bool rdecode(

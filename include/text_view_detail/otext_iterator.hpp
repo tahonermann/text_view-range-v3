@@ -41,7 +41,7 @@ public:
     using value_type = character_type_t<encoding_type>;
     using reference = value_type&;
     using pointer = value_type*;
-    using difference_type = ranges::iterator_difference_t<iterator>;
+    using difference_type = ranges::difference_type_t<iterator>;
 
 public:
     otext_iterator() = default;

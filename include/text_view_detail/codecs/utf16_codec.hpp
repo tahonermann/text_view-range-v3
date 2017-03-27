@@ -80,7 +80,7 @@ public:
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
         ranges::InputIterator<CUIT>(),
-        ranges::ConvertibleTo<ranges::iterator_value_t<CUIT>, code_unit_type>(),
+        ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static bool decode(
         state_type &state,
@@ -122,7 +122,7 @@ public:
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
         ranges::InputIterator<CUIT>(),
-        ranges::ConvertibleTo<ranges::iterator_value_t<CUIT>, code_unit_type>(),
+        ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static bool rdecode(
         state_type &state,

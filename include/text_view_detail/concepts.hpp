@@ -135,7 +135,7 @@ struct CodeUnitIterator
     template<typename T>
     auto requires_(T &&) -> decltype(
         ranges::concepts::valid_expr(
-            ranges::concepts::model_of<CodeUnit, ranges::iterator_value_t<T>>()
+            ranges::concepts::model_of<CodeUnit, ranges::value_type_t<T>>()
         )
     );
 };
@@ -269,7 +269,7 @@ struct TextDecoder
             >(),
             ranges::concepts::model_of<
                 ranges::concepts::ConvertibleTo,
-                ranges::iterator_value_t<CUIT>,
+                ranges::value_type_t<CUIT>,
                 code_unit_type_t<T>
             >(),
             ranges::concepts::convertible_to<bool>(
@@ -449,7 +449,7 @@ struct TextInputIterator
     auto requires_(T &&) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                Character, ranges::iterator_value_t<T>
+                Character, ranges::value_type_t<T>
             >()
         )
     );
@@ -502,7 +502,7 @@ struct TextView
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                TextIterator, ranges::range_iterator_t<T>
+                TextIterator, ranges::iterator_t<T>
             >(),
             ranges::concepts::model_of<
                 TextEncoding, encoding_type_t<T>
@@ -555,7 +555,7 @@ struct TextInputView
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                TextInputIterator, ranges::range_iterator_t<T>
+                TextInputIterator, ranges::iterator_t<T>
             >()
         )
     );
@@ -572,7 +572,7 @@ struct TextForwardView
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                TextForwardIterator, ranges::range_iterator_t<T>
+                TextForwardIterator, ranges::iterator_t<T>
             >()
         )
     );
@@ -589,7 +589,7 @@ struct TextBidirectionalView
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                TextBidirectionalIterator, ranges::range_iterator_t<T>
+                TextBidirectionalIterator, ranges::iterator_t<T>
             >()
         )
     );
@@ -606,7 +606,7 @@ struct TextRandomAccessView
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                TextRandomAccessIterator, ranges::range_iterator_t<T>
+                TextRandomAccessIterator, ranges::iterator_t<T>
             >()
         )
     );
