@@ -20,7 +20,7 @@ matrix:
       compiler: gcc
       env: COMPILER=g++-6
            BUILD_TYPE=RELEASE
-           LAST_KNOWN_GOOD_RANGE_V3=7d82079f947fcd99f66d52f6790646d546fb2185
+           LAST_KNOWN_GOOD_RANGE_V3=e07976393f8811d06c14cebed111005462a4b98c
 
     # Linux, gcc 6:
     - os: linux
