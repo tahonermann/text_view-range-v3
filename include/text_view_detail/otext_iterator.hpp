@@ -41,7 +41,7 @@ public:
     using value_type = character_type_t<encoding_type>;
     using reference = value_type&;
     using pointer = value_type*;
-    using difference_type = ranges::iterator_difference_t<iterator>;
+    using difference_type = ranges::difference_type_t<iterator>;
 
 public:
     otext_iterator() = default;
@@ -114,7 +114,7 @@ private:
  * make_otext_iterator
  */
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and and an explicitly specified initial
+// encoding from an output iterator and an explicitly specified initial
 // encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
@@ -128,7 +128,7 @@ otext_iterator<ET, IT> make_otext_iterator(
 }
 
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and and an implicit initial encoding state.
+// encoding from an output iterator and an implicit initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),

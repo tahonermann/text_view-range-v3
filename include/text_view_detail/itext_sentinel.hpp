@@ -27,27 +27,12 @@ class itext_sentinel {
 public:
     using view_type = VT;
     using sentinel =
-        ranges::range_sentinel_t<typename std::add_const<VT>::type>;
+        ranges::sentinel_t<typename std::add_const<VT>::type>;
 
     itext_sentinel() = default;
 
     itext_sentinel(sentinel s)
         : s{s} {}
-
-    friend bool operator==(
-        const itext_sentinel &l,
-        const itext_sentinel &r) noexcept
-    {
-        // Sentinels always compare equal regardless of any internal state.
-        // See N4128, 10.1 "Sentinel Equality".
-        return true;
-    }
-    friend bool operator!=(
-        const itext_sentinel &l,
-        const itext_sentinel &r) noexcept
-    {
-        return !(l == r);
-    }
 
     friend bool operator==(
         const itext_iterator<ET, VT> &ti,
