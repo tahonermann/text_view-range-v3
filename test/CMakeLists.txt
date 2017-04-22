@@ -8,23 +8,12 @@ cmake_minimum_required(VERSION 3.0.2)
 
 project(text_view-range-v3_test CXX)
 
-find_package(text_view_range_v3 REQUIRED)
-
 add_executable(
   test-encodings
   test-encodings.cpp)
-set_target_properties(
+target_link_libraries(
   test-encodings
-  PROPERTIES ${text_view_range_v3_PROPERTIES})
-target_compile_options(
-  test-encodings
-  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
-target_compile_definitions(
-  test-encodings
-  PRIVATE ${text_view_range_v3_DEFINITIONS})
-target_include_directories(
-  test-encodings
-  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
+  PRIVATE text-view-range-v3)
 
 include(CTest)
 add_test(
@@ -34,18 +23,9 @@ add_test(
 add_executable(
   test-models
   test-models.cpp)
-set_target_properties(
+target_link_libraries(
   test-models
-  PROPERTIES ${text_view_range_v3_PROPERTIES})
-target_compile_options(
-  test-models
-  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
-target_compile_definitions(
-  test-models
-  PRIVATE ${text_view_range_v3_DEFINITIONS})
-target_include_directories(
-  test-models
-  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
+  PRIVATE text-view-range-v3)
 
 include(CTest)
 add_test(
@@ -55,18 +35,9 @@ add_test(
 add_executable(
   test-subobject
   test-subobject.cpp)
-set_target_properties(
+target_link_libraries(
   test-subobject
-  PROPERTIES ${text_view_range_v3_PROPERTIES})
-target_compile_options(
-  test-subobject
-  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
-target_compile_definitions(
-  test-subobject
-  PRIVATE ${text_view_range_v3_DEFINITIONS})
-target_include_directories(
-  test-subobject
-  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
+  PRIVATE text-view-range-v3)
 
 include(CTest)
 add_test(
