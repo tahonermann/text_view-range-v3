@@ -22,10 +22,8 @@ https://groups.google.com/d/forum/text_view
 - [Current features and limitations](#current-features-and-limitations)
 - [Requirements](#requirements)
 - [Build and installation](#build-and-installation)
-  - [Building and installing range-v3]
-    (#building-and-installing-range-v3)
-  - [Building and installing Text_view for range-v3]
-    (#building-and-installing-text_view-for-range-v3)
+  - [Building and installing range-v3](#building-and-installing-range-v3)
+  - [Building and installing Text_view for range-v3](#building-and-installing-text_view-for-range-v3)
 - [Usage](#usage)
 - [Supported Encodings](#supported-encodings)
 - [Terminology](#terminology)

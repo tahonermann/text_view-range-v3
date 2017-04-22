@@ -6,7 +6,7 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(tv-range-v3-find-utf8-multi-code-unit-code-point CXX)
+project(text_view-range-v3_examples_tv-find-utf8-multi-code-unit-code-point CXX)
 
 find_package(text_view_range_v3 REQUIRED)
 

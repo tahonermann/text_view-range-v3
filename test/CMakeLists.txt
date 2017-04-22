@@ -1,4 +1,4 @@
-# Copyright (c) 2016, Tristan Brindle, Tom Honermann
+# Copyright (c) 2017, Tristan Brindle, Tom Honermann
 #
 # This file is distributed under the MIT License. See the accompanying file
 # LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -6,30 +6,51 @@
 
 cmake_minimum_required(VERSION 3.0.2)
 
-project(test-text-view-range-v3 CXX)
+project(text_view-range-v3_test CXX)
 
 find_package(text_view_range_v3 REQUIRED)
 
 add_executable(
-  test-text-view
-  test-text_view.cpp)
+  test-encodings
+  test-encodings.cpp)
 set_target_properties(
-  test-text-view
+  test-encodings
   PROPERTIES ${text_view_range_v3_PROPERTIES})
 target_compile_options(
-  test-text-view
+  test-encodings
   PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
 target_compile_definitions(
-  test-text-view
+  test-encodings
   PRIVATE ${text_view_range_v3_DEFINITIONS})
 target_include_directories(
-  test-text-view
+  test-encodings
   PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
 
 include(CTest)
 add_test(
-  NAME test-text-view
-  COMMAND test-text-view)
+  NAME test-encodings
+  COMMAND test-encodings)
+
+add_executable(
+  test-models
+  test-models.cpp)
+set_target_properties(
+  test-models
+  PROPERTIES ${text_view_range_v3_PROPERTIES})
+target_compile_options(
+  test-models
+  PRIVATE ${text_view_range_v3_COMPILE_OPTIONS})
+target_compile_definitions(
+  test-models
+  PRIVATE ${text_view_range_v3_DEFINITIONS})
+target_include_directories(
+  test-models
+  PRIVATE ${text_view_range_v3_INCLUDE_DIRS})
+
+include(CTest)
+add_test(
+  NAME test-models
+  COMMAND test-models)
 
 add_executable(
   test-subobject
