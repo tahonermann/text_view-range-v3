@@ -70,7 +70,7 @@ void dump_code_points(
     ios_format_preserver ifp{cout};
 
     using CUT = code_unit_type_t<ET>;
-    istream_iterator<CUT> ifs_in(ifs), ifs_end;
+    istream_iterator<CUT> ifs_in{ifs}, ifs_end{};
 
     auto tv = make_text_view<ET>(ifs_in, ifs_end);
     for (auto tvit = begin(tv); tvit != end(tv); ++tvit) {
