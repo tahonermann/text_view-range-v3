@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -9,7 +9,7 @@
 
 
 #include <text_view_detail/concepts.hpp>
-#include <text_view_detail/exceptions.hpp>
+#include <text_view_detail/error_status.hpp>
 #include <text_view_detail/character.hpp>
 #include <text_view_detail/trivial_encoding_state.hpp>
 
@@ -35,18 +35,20 @@ public:
 
     template<typename CUIT,
     CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
-    static void encode_state_transition(
+    static encode_status encode_state_transition(
         state_type &state,
         CUIT &out,
         const state_transition_type &stt,
         int &encoded_code_units)
     {
         encoded_code_units = 0;
+
+        return encode_status::no_error;
     }
 
     template<typename CUIT,
     CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
-    static void encode(
+    static encode_status encode(
         state_type &state,
         CUIT &out,
         character_type c,
@@ -59,6 +61,8 @@ public:
         code_unit_type cu(cp);
         *out++ = cu;
         encoded_code_units = 1;
+
+        return encode_status::no_error;
     }
 
     template<typename CUIT, typename CUST,
@@ -67,7 +71,7 @@ public:
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
-    static bool decode(
+    static decode_status decode(
         state_type &state,
         CUIT &in_next,
         CUST in_end,
@@ -78,14 +82,15 @@ public:
             code_point_type_t<character_set_type_t<character_type>>;
 
         if (in_next == in_end) {
-            throw text_decode_underflow_error("text decode underflow error");
+            return decode_status::underflow;
         } else {
             code_unit_type cu{*in_next++};
             code_point_type cp(cu);
             c.set_code_point(cp);
             decoded_code_units = 1;
         }
-        return true;
+
+        return decode_status::no_error;
     }
 
     template<typename CUIT, typename CUST,
@@ -94,7 +99,7 @@ public:
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<ranges::value_type_t<CUIT>, code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
-    static bool rdecode(
+    static decode_status rdecode(
         state_type &state,
         CUIT &in_next,
         CUST in_end,
@@ -105,14 +110,15 @@ public:
             code_point_type_t<character_set_type_t<character_type>>;
 
         if (in_next == in_end) {
-            throw text_decode_underflow_error("text decode underflow error");
+            return decode_status::underflow;
         } else {
             code_unit_type cu{*in_next++};
             code_point_type cp(cu);
             c.set_code_point(cp);
             decoded_code_units = 1;
         }
-        return true;
+
+        return decode_status::no_error;
     }
 };
 

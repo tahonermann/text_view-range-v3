@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -13,6 +13,7 @@
 #include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/adl_customization.hpp>
 #include <text_view_detail/concepts.hpp>
+#include <text_view_detail/exceptions.hpp>
 #include <text_view_detail/iterator_preserve.hpp>
 #include <text_view_detail/subobject.hpp>
 
@@ -379,14 +380,19 @@ public:
         while (preserved_base.get() != end) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::decode(
+            decode_status ds = encoding_type::decode(
                 this->mutable_state(),
                 preserved_base.get(),
                 end,
                 tmp_value,
                 decoded_code_units);
             preserved_base.update();
-            if (decoded_code_point) {
+            if (error_occurred(ds)) {
+                // FIXME: Delay throwing the exception until the iterator is
+                // FIXME: dereferenced.
+                throw text_decode_error{ds};
+            }
+            else if (ds == decode_status::no_error) {
                 value = tmp_value;
                 ok = true;
                 break;
@@ -405,14 +411,19 @@ public:
         while (tmp_iterator != end) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::decode(
+            decode_status ds = encoding_type::decode(
                 this->mutable_state(),
                 tmp_iterator,
                 end,
                 tmp_value,
                 decoded_code_units);
             this->mutable_base_range().last = tmp_iterator;
-            if (decoded_code_point) {
+            if (error_occurred(ds)) {
+                // FIXME: Delay throwing the exception until the iterator is
+                // FIXME: dereferenced.
+                throw text_decode_error{ds};
+            }
+            else if (ds == decode_status::no_error) {
                 value = tmp_value;
                 ok = true;
                 break;
@@ -449,14 +460,19 @@ public:
         while (rcurrent != rend) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::rdecode(
+            decode_status ds = encoding_type::rdecode(
                 this->mutable_state(),
                 rcurrent,
                 rend,
                 tmp_value,
                 decoded_code_units);
             this->mutable_base_range().first = rcurrent.base();
-            if (decoded_code_point) {
+            if (error_occurred(ds)) {
+                // FIXME: Delay throwing the exception until the iterator is
+                // FIXME: dereferenced.
+                throw text_decode_error{ds};
+            }
+            else if (ds == decode_status::no_error) {
                 value = tmp_value;
                 ok = true;
                 break;

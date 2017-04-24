@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -14,6 +14,7 @@
 #include <range/v3/utility/concepts.hpp>
 #include <range/v3/utility/iterator_concepts.hpp>
 #include <range/v3/utility/iterator_traits.hpp>
+#include <text_view_detail/error_status.hpp>
 #include <text_view_detail/traits.hpp>
 #include <text_view_detail/character_set_id.hpp>
 
@@ -240,8 +241,12 @@ struct TextEncoder
             ranges::concepts::model_of<
                 CodeUnitOutputIterator, CUIT, code_unit_type_t<T>
             >(),
-            (T::encode_state_transition(s<T>(), out, st<T>(), encoded_code_units()),0),
-            (T::encode(s<T>(), out, c<T>(), encoded_code_units()),0)
+            ranges::concepts::convertible_to<encode_status>(
+                T::encode_state_transition(s<T>(), out, st<T>(), encoded_code_units())
+            ),
+            ranges::concepts::convertible_to<encode_status>(
+                T::encode(s<T>(), out, c<T>(), encoded_code_units())
+            )
         )
     );
 };
@@ -272,8 +277,8 @@ struct TextDecoder
                 ranges::value_type_t<CUIT>,
                 code_unit_type_t<T>
             >(),
-            ranges::concepts::convertible_to<bool>(
-                (T::decode(s<T>(), in, in, c<T>(), decoded_code_units()),0)
+            ranges::concepts::convertible_to<decode_status>(
+                T::decode(s<T>(), in, in, c<T>(), decoded_code_units())
             )
         )
     );
@@ -323,8 +328,8 @@ struct TextBidirectionalDecoder
             ranges::concepts::model_of<
                 ranges::concepts::BidirectionalIterator, CUIT
             >(),
-            ranges::concepts::convertible_to<bool>(
-                (T::rdecode(s<T>(), in, in, c<T>(), decoded_code_units()),0)
+            ranges::concepts::convertible_to<decode_status>(
+                T::rdecode(s<T>(), in, in, c<T>(), decoded_code_units())
             )
         )
     );

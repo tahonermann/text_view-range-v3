@@ -46,10 +46,12 @@ unset(text_view_range_v3_INCLUDE_DIR)
 # Determine the platform specific installation file layout.
 if(UNIX)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_INCLUDE include)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_LIB lib)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_SHARE share/text_view_range_v3)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE share/text_view_range_v3/cmake)
 elseif(WIN32)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_INCLUDE text_view_range_v3/include)
+  set(TEXT_VIEW_RANGE_V3_DESTINATION_LIB text_view_range_v3/lib)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_SHARE text_view_range_v3)
   set(TEXT_VIEW_RANGE_V3_DESTINATION_CMAKE text_view_range_v3/cmake)
 else()
@@ -57,7 +59,7 @@ else()
 endif()
 
 # Include sub-directories.
-add_subdirectory(include)
+add_subdirectory(src)
 add_subdirectory(test)
 add_subdirectory(examples)
 

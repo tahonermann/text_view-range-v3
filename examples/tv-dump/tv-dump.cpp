@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -189,8 +189,8 @@ int main(
             usage(cerr, argv[0]);
             return exit_user_error;
         }
-    } catch (const text_runtime_error &tre) {
-        cerr << "error: " << tre.what() << endl;
+    } catch (const text_error &te) {
+        cerr << "error: " << te.what() << endl;
         return exit_failure;
     }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -81,9 +81,12 @@ public:
         // actual output iterator).
         auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
-        encoding_type::encode_state_transition(
+        encode_status es = encoding_type::encode_state_transition(
             mutable_state(), preserved_current.get(), stt, encoded_code_units);
         preserved_current.update();
+        if (error_occurred(es)) {
+            throw text_encode_error{es};
+        }
         return *this;
     }
 
@@ -95,9 +98,12 @@ public:
         // actual output iterator).
         auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
-        encoding_type::encode(
+        encode_status es = encoding_type::encode(
             mutable_state(), preserved_current.get(), value, encoded_code_units);
         preserved_current.update();
+        if (error_occurred(es)) {
+            throw text_encode_error{es};
+        }
         return *this;
     }
 
