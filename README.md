@@ -58,13 +58,6 @@ $ cd range-v3
 $ git checkout e07976393f8811d06c14cebed111005462a4b98c
 ```
 
-## Building and installing [Text_view for range-v3][Text_view-range-v3]
-[Text_view for range-v3][Text_view-range-v3] is currently a header-only
-library, so no build or installation is currently required to use it.  It is
-unlikely that [Text_view for range-v3][Text_view-range-v3] will remain a
-header-only library in the future, so at some point, a build and installation
-step will be required.
-
 [Text_view for range-v3][Text_view-range-v3] has a [CMake] based build system
 sufficient to build and run its tests, to validate example code, and to perform
 a minimal installation following established operating system conventions.  By
@@ -156,7 +149,7 @@ examples exemplify a minimal [CMake] based build system for a downstream
 consumer of [Text_view for range-v3][Text_view-range-v3].
 
 See the [Text_view documentation](https://github.com/tahonermann/text_view/blob/master/README.md#usage)
-for additional details..
+for additional details.
 
 # Supported Encodings
 See the [Text_view documentation](https://github.com/tahonermann/text_view/blob/master/README.md#supported-encodings).
