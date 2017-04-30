@@ -111,6 +111,11 @@ struct Character
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<CharacterSet, character_set_type_t<T>>(),
             (t.set_code_point(cp<T>()), 0),
+            ranges::concepts::is_true(
+                std::integral_constant<bool,
+                    noexcept(t.set_code_point(cp<T>()))
+                >{}
+            ),
             ranges::concepts::convertible_to<cpt<T>>(
                 ct<T>().get_code_point()
             ),

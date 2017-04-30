@@ -10,6 +10,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <text_view_detail/codecs/codec_util.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/error_status.hpp>
 #include <text_view_detail/character.hpp>
@@ -44,6 +45,7 @@ public:
         CUIT &out,
         const state_transition_type &stt,
         int &encoded_code_units)
+    noexcept
     {
         encoded_code_units = 0;
 
@@ -57,6 +59,7 @@ public:
         CUIT &out,
         character_type c,
         int &encoded_code_units)
+    noexcept(text_detail::NoExceptOutputIterator<CUIT, code_unit_type>())
     {
         encoded_code_units = 0;
 
@@ -93,6 +96,7 @@ public:
         CUST in_end,
         character_type &c,
         int &decoded_code_units)
+    noexcept(text_detail::NoExceptInputIterator<CUIT, CUST>())
     {
         decoded_code_units = 0;
 
@@ -138,6 +142,7 @@ public:
         CUST in_end,
         character_type &c,
         int &decoded_code_units)
+    noexcept(text_detail::NoExceptInputIterator<CUIT, CUST>())
     {
         decoded_code_units = 0;
 

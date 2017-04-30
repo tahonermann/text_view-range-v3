@@ -9,6 +9,7 @@
 
 
 #include <climits>
+#include <text_view_detail/codecs/codec_util.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/character.hpp>
 #include <text_view_detail/error_status.hpp>
@@ -31,6 +32,8 @@ public:
     using state_transition_type = trivial_encoding_state_transition;
     using character_type = CT;
     using code_unit_type = CUT;
+    using unsigned_code_unit_type =
+        typename std::make_unsigned<code_unit_type>::type;
     static constexpr int min_code_units = 1;
     static constexpr int max_code_units = 4;
 
@@ -40,12 +43,13 @@ public:
     CONCEPT_REQUIRES_(
         CodeUnitOutputIterator<
             CUIT,
-            typename std::make_unsigned<code_unit_type>::type>())>
+            unsigned_code_unit_type>())>
     static encode_status encode_state_transition(
         state_type &state,
         CUIT &out,
         const state_transition_type &stt,
         int &encoded_code_units)
+    noexcept
     {
         encoded_code_units = 0;
 
@@ -56,17 +60,16 @@ public:
     CONCEPT_REQUIRES_(
         CodeUnitOutputIterator<
             CUIT,
-            typename std::make_unsigned<code_unit_type>::type>())>
+            unsigned_code_unit_type>())>
     static encode_status encode(
         state_type &state,
         CUIT &out,
         character_type c,
         int &encoded_code_units)
+    noexcept(text_detail::NoExceptOutputIterator<CUIT, unsigned_code_unit_type>())
     {
         encoded_code_units = 0;
 
-        using unsigned_code_unit_type =
-            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp{c.get_code_point()};
@@ -119,7 +122,7 @@ public:
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
-            typename std::make_unsigned<code_unit_type>::type>(),
+            unsigned_code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static decode_status decode(
         state_type &state,
@@ -127,11 +130,10 @@ public:
         CUST in_end,
         character_type &c,
         int &decoded_code_units)
+    noexcept(text_detail::NoExceptInputIterator<CUIT, CUST>())
     {
         decoded_code_units = 0;
 
-        using unsigned_code_unit_type =
-            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp;
@@ -206,7 +208,7 @@ public:
         ranges::InputIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
-            typename std::make_unsigned<code_unit_type>::type>(),
+            unsigned_code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
     static decode_status rdecode(
         state_type &state,
@@ -214,11 +216,10 @@ public:
         CUST in_end,
         character_type &c,
         int &decoded_code_units)
+    noexcept(text_detail::NoExceptInputIterator<CUIT, CUST>())
     {
         decoded_code_units = 0;
 
-        using unsigned_code_unit_type =
-            typename std::make_unsigned<code_unit_type>::type;
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp;
