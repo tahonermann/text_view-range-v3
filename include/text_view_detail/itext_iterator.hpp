@@ -25,6 +25,47 @@ inline namespace text {
 
 namespace text_detail {
 
+template<typename ET,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>())>
+class character_or_error {
+    using character_type = character_type_t<ET>;
+
+public:
+    bool has_character() const noexcept {
+        return have_character;
+    }
+
+    void set_character(character_type c) noexcept {
+        u.c = c;
+        have_character = true;
+    }
+    character_type& get_character() {
+        if (have_character) {
+            return u.c;
+        }
+        throw text_decode_error{u.ds};
+    }
+    const character_type& get_character() const {
+        return const_cast<character_or_error*>(this)->get_character();
+    }
+
+    void set_error(decode_status ds) noexcept {
+        u.ds = ds;
+        have_character = false;
+    }
+    decode_status get_error() const noexcept {
+        return have_character ? decode_status::no_error : u.ds;
+    }
+
+private:
+    union {
+        decode_status ds;
+        character_type c;
+    } u = { decode_status::no_error };
+    bool have_character = false;
+};
+
 template<typename ET, typename CUIT, typename Enable = void>
 struct itext_iterator_category;
 
@@ -286,13 +327,16 @@ private:
             : self(self), value(self.value)
         {}
 
-        reference operator*() const noexcept {
-            return value;
+        reference operator*() const {
+            return value.get_character();
+        }
+        pointer operator->() const {
+            return &value.get_character();
         }
 
     private:
         itext_iterator& self;
-        value_type value;
+        text_detail::character_or_error<encoding_type> value;
     };
 
 public:
@@ -317,11 +361,11 @@ public:
         return ok;
     }
 
-    reference operator*() const noexcept {
-        return { value };
+    reference operator*() const {
+        return value.get_character();
     }
-    pointer operator->() const noexcept {
-        return &value;
+    pointer operator->() const {
+        return &value.get_character();
     }
 
     friend bool operator==(
@@ -388,12 +432,10 @@ public:
                 decoded_code_units);
             preserved_base.update();
             if (error_occurred(ds)) {
-                // FIXME: Delay throwing the exception until the iterator is
-                // FIXME: dereferenced.
-                throw text_decode_error{ds};
+                value.set_error(ds);
             }
             else if (ds == decode_status::no_error) {
-                value = tmp_value;
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -419,12 +461,10 @@ public:
                 decoded_code_units);
             this->mutable_base_range().last = tmp_iterator;
             if (error_occurred(ds)) {
-                // FIXME: Delay throwing the exception until the iterator is
-                // FIXME: dereferenced.
-                throw text_decode_error{ds};
+                value.set_error(ds);
             }
             else if (ds == decode_status::no_error) {
-                value = tmp_value;
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -468,12 +508,10 @@ public:
                 decoded_code_units);
             this->mutable_base_range().first = rcurrent.base();
             if (error_occurred(ds)) {
-                // FIXME: Delay throwing the exception until the iterator is
-                // FIXME: dereferenced.
-                throw text_decode_error{ds};
+                value.set_error(ds);
             }
             else if (ds == decode_status::no_error) {
-                value = tmp_value;
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -579,7 +617,7 @@ private:
     }
 
 private:
-    value_type value = {};
+    text_detail::character_or_error<encoding_type> value;
     bool ok = false;
 };
 
