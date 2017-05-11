@@ -116,6 +116,9 @@ struct Character
     template<typename T>
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
+            ranges::concepts::model_of<
+                ranges::concepts::Constructible, T, cpt<T>
+            >(),
             ranges::concepts::model_of<CharacterSet, character_set_type_t<T>>(),
             (t.set_code_point(cp<T>()), 0),
             ranges::concepts::is_true(
