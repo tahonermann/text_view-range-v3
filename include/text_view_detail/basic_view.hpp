@@ -35,6 +35,17 @@ private:
     ST last = {};
 };
 
+
+template<typename IT, typename ST = IT,
+CONCEPT_REQUIRES_(
+    ranges::Iterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
+basic_view<IT, ST> make_basic_view(IT first, ST last)
+{
+    return basic_view<IT, ST>{std::move(first), std::move(last)};
+}
+
+
 } // namespace text_detail
 } // inline namespace text
 } // namespace experimental
