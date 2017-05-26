@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -14,8 +14,10 @@
 #include <range/v3/utility/concepts.hpp>
 #include <range/v3/utility/iterator_concepts.hpp>
 #include <range/v3/utility/iterator_traits.hpp>
+#include <text_view_detail/error_status.hpp>
 #include <text_view_detail/traits.hpp>
 #include <text_view_detail/character_set_id.hpp>
+#include <text_view_detail/error_policy.hpp>
 
 
 namespace std {
@@ -84,6 +86,12 @@ struct CharacterSet {
             ranges::concepts::is_true(
                 std::integral_constant<bool, noexcept(T::get_name())>{}
             ),
+            ranges::concepts::convertible_to<code_point_type_t<T>>(
+                T::get_substitution_code_point()),
+            ranges::concepts::is_true(
+                std::integral_constant<
+                    bool, noexcept(T::get_substitution_code_point())>{}
+            ),
             ranges::concepts::model_of<CodePoint, code_point_type_t<T>>()
         )
     );
@@ -108,8 +116,16 @@ struct Character
     template<typename T>
     auto requires_(T &&t) -> decltype(
         ranges::concepts::valid_expr(
+            ranges::concepts::model_of<
+                ranges::concepts::Constructible, T, cpt<T>
+            >(),
             ranges::concepts::model_of<CharacterSet, character_set_type_t<T>>(),
             (t.set_code_point(cp<T>()), 0),
+            ranges::concepts::is_true(
+                std::integral_constant<bool,
+                    noexcept(t.set_code_point(cp<T>()))
+                >{}
+            ),
             ranges::concepts::convertible_to<cpt<T>>(
                 ct<T>().get_code_point()
             ),
@@ -180,6 +196,28 @@ struct TextEncodingStateTransition
 
 
 /*
+ * Text error policy concept
+ */
+struct TextErrorPolicy {
+    template<typename T>
+    auto requires_(T &&) -> decltype(
+        ranges::concepts::valid_expr(
+            ranges::concepts::model_of<
+                ranges::concepts::SemiRegular, T
+            >(),
+            ranges::concepts::model_of<
+                ranges::concepts::DerivedFrom, T, text_error_policy
+            >(),
+            ranges::concepts::is_false(
+                std::is_same<typename std::remove_cv<T>::type,
+                             text_error_policy>{}
+            )
+        )
+    );
+};
+
+
+/*
  * Text encoding concept
  */
 struct TextEncoding {
@@ -240,8 +278,12 @@ struct TextEncoder
             ranges::concepts::model_of<
                 CodeUnitOutputIterator, CUIT, code_unit_type_t<T>
             >(),
-            (T::encode_state_transition(s<T>(), out, st<T>(), encoded_code_units()),0),
-            (T::encode(s<T>(), out, c<T>(), encoded_code_units()),0)
+            ranges::concepts::convertible_to<encode_status>(
+                T::encode_state_transition(s<T>(), out, st<T>(), encoded_code_units())
+            ),
+            ranges::concepts::convertible_to<encode_status>(
+                T::encode(s<T>(), out, c<T>(), encoded_code_units())
+            )
         )
     );
 };
@@ -272,8 +314,8 @@ struct TextDecoder
                 ranges::value_type_t<CUIT>,
                 code_unit_type_t<T>
             >(),
-            ranges::concepts::convertible_to<bool>(
-                (T::decode(s<T>(), in, in, c<T>(), decoded_code_units()),0)
+            ranges::concepts::convertible_to<decode_status>(
+                T::decode(s<T>(), in, in, c<T>(), decoded_code_units())
             )
         )
     );
@@ -323,8 +365,8 @@ struct TextBidirectionalDecoder
             ranges::concepts::model_of<
                 ranges::concepts::BidirectionalIterator, CUIT
             >(),
-            ranges::concepts::convertible_to<bool>(
-                (T::rdecode(s<T>(), in, in, c<T>(), decoded_code_units()),0)
+            ranges::concepts::convertible_to<decode_status>(
+                T::rdecode(s<T>(), in, in, c<T>(), decoded_code_units())
             )
         )
     );
@@ -377,6 +419,9 @@ struct TextIterator
                 TextEncoding, encoding_type_t<T>
             >(),
             ranges::concepts::model_of<
+                TextErrorPolicy, typename T::error_policy
+            >(),
+            ranges::concepts::model_of<
                 TextEncodingState, typename T::state_type
             >(),
             ranges::concepts::convertible_to<
@@ -387,6 +432,16 @@ struct TextIterator
             ranges::concepts::is_true(
                 std::integral_constant<bool,
                     noexcept(ct<T>().state())
+                >{}
+            ),
+            ranges::concepts::convertible_to<
+                bool
+            >(
+                ct<T>().error_occurred()
+            ),
+            ranges::concepts::is_true(
+                std::integral_constant<bool,
+                    noexcept(ct<T>().error_occurred())
                 >{}
             )
         )
@@ -408,6 +463,9 @@ struct TextSentinel
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
                 TextIterator, I
+            >(),
+            ranges::concepts::model_of<
+                TextErrorPolicy, typename T::error_policy
             >()
         )
     );
@@ -431,7 +489,17 @@ struct TextOutputIterator
                 ranges::concepts::OutputIterator,
                     T,
                     character_type_t<encoding_type_t<T>>
-            >()
+            >(),
+            ranges::concepts::convertible_to<
+                encode_status
+            >(
+                ct<T>().get_error()
+            ),
+            ranges::concepts::is_true(
+                std::integral_constant<bool,
+                    noexcept(ct<T>().get_error())
+                >{}
+            )
         )
     );
 };
@@ -446,11 +514,24 @@ struct TextInputIterator
           ranges::concepts::InputIterator>
 {
     template<typename T>
+    const T ct() noexcept;
+
+    template<typename T>
     auto requires_(T &&) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
                 Character, ranges::value_type_t<T>
-            >()
+            >(),
+            ranges::concepts::convertible_to<
+                decode_status
+            >(
+                ct<T>().get_error()
+            ),
+            ranges::concepts::is_true(
+                std::integral_constant<bool,
+                    noexcept(ct<T>().get_error())
+                >{}
+            )
         )
     );
 };
@@ -506,6 +587,9 @@ struct TextView
             >(),
             ranges::concepts::model_of<
                 TextEncoding, encoding_type_t<T>
+            >(),
+            ranges::concepts::model_of<
+                TextErrorPolicy, typename T::error_policy
             >(),
             ranges::concepts::model_of<
                 ranges::concepts::View, typename T::view_type
@@ -638,6 +722,9 @@ using TextEncodingState = ranges::concepts::models<concepts::TextEncodingState, 
 
 template<typename T>
 using TextEncodingStateTransition = ranges::concepts::models<concepts::TextEncodingStateTransition, T>;
+
+template<typename T>
+using TextErrorPolicy = ranges::concepts::models<concepts::TextErrorPolicy, T>;
 
 template<typename T>
 using TextEncoding = ranges::concepts::models<concepts::TextEncoding, T>;

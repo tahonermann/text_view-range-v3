@@ -20,6 +20,7 @@
 #include <text_view_detail/basic_view.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/default_encoding.hpp>
+#include <text_view_detail/error_policy.hpp>
 #include <text_view_detail/itext_iterator.hpp>
 #include <text_view_detail/itext_sentinel.hpp>
 #include <text_view_detail/subobject.hpp>
@@ -30,10 +31,11 @@ namespace experimental {
 inline namespace text {
 
 
-template<typename ET, typename VT,
+template<typename ET, typename VT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    ranges::View<VT>())>
+    ranges::View<VT>(),
+    TextErrorPolicy<TEP>())>
 class basic_text_view
     : private text_detail::subobject<typename ET::state_type>,
       public ranges::view_base
@@ -43,6 +45,7 @@ class basic_text_view
 public:
     using encoding_type = ET;
     using view_type = VT;
+    using error_policy = TEP;
     using state_type = typename ET::state_type;
     using code_unit_iterator =
         ranges::iterator_t<
@@ -50,8 +53,8 @@ public:
     using code_unit_sentinel =
         ranges::sentinel_t<
             typename std::add_const<view_type>::type>;
-    using iterator = itext_iterator<ET, VT>;
-    using sentinel = itext_sentinel<ET, VT>;
+    using iterator = itext_iterator<ET, VT, TEP>;
+    using sentinel = itext_sentinel<ET, VT, TEP>;
 
     // The default constructor produces a text view with a singular range.  An
     // object produced with this constructor may only be assigned to or
@@ -335,8 +338,29 @@ using u32text_view = basic_text_view<
  * make_text_view
  */
 // Overload to construct a text view for an explicitly specified encoding type
-// from an InputIterator and Sentinel pair, and an explicitly specified initial
-// encoding state.
+// and error policy from an InputIterator and Sentinel pair, and an explicitly
+// specified initial encoding state.
+template<typename ET, typename TEP, typename IT, typename ST,
+         typename VT = text_detail::basic_view<IT, ST>,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    IT first,
+    ST last)
+-> basic_text_view<ET, VT, TEP>
+{
+    return basic_text_view<ET, VT, TEP>{std::move(state),
+                                        std::move(first),
+                                        std::move(last)};
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and an implicitly specified error policy from an InputIterator and Sentinel
+// pair, and an explicitly specified initial encoding state.
 template<typename ET, typename IT, typename ST,
          typename VT = text_detail::basic_view<IT, ST>,
 CONCEPT_REQUIRES_(
@@ -355,8 +379,30 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from an InputIterator and Sentinel pair, and an explicitly specified initial
-// encoding state.
+// and explicitly specified error policy from an InputIterator and Sentinel
+// pair, and an explicitly specified initial encoding state.
+template<typename TEP, typename IT, typename ST, typename ET =
+         default_encoding_type_t<ranges::value_type_t<IT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    IT first,
+    ST last)
+-> decltype(text::make_text_view<ET, TEP>(std::move(state),
+                                          std::move(first),
+                                          std::move(last)))
+{
+    return text::make_text_view<ET, TEP>(std::move(state),
+                                         std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from an InputIterator and Sentinel pair, and an explicitly
+// specified initial encoding state.
 template<typename IT, typename ST, typename ET =
          default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
@@ -376,8 +422,27 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an explicitly specified encoding type
-// from an InputIterator and Sentinel pair, and an implicit initial encoding
-// state.
+// and error policy from an InputIterator and Sentinel pair, and an implicit
+// initial encoding state.
+template<typename ET, typename TEP, typename IT, typename ST,
+         typename VT = text_detail::basic_view<IT, ST>,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
+auto make_text_view(
+    IT first,
+    ST last)
+-> basic_text_view<ET, VT, TEP>
+{
+    return basic_text_view<ET, VT, TEP>{std::move(first),
+                                        std::move(last)};
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and an implicitly specified error policy from an InputIterator and Sentinel
+// pair, and an implicit initial encoding state.
 template<typename ET, typename IT, typename ST,
          typename VT = text_detail::basic_view<IT, ST>,
 CONCEPT_REQUIRES_(
@@ -394,8 +459,27 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from an InputIterator and Sentinel pair, and an implicit initial encoding
-// state.
+// and explicitly specified error policy from an InputIterator and Sentinel
+// pair, and an implicit initial encoding state.
+template<typename TEP, typename IT, typename ST, typename ET =
+         default_encoding_type_t<ranges::value_type_t<IT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::InputIterator<IT>(),
+    ranges::Sentinel<ST, IT>())>
+auto make_text_view(
+    IT first,
+    ST last)
+-> decltype(text::make_text_view<ET, TEP>(std::move(first),
+                                          std::move(last)))
+{
+    return text::make_text_view<ET, TEP>(std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from an InputIterator and Sentinel pair, and an implicit
+// initial encoding state.
 template<typename IT, typename ST, typename ET =
          default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
@@ -412,8 +496,30 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an explicitly specified encoding type
-// from a ForwardIterator and count pair, and an explicitly specified initial
-// encoding state.
+// and error policy from a ForwardIterator and count pair, and an explicitly
+// specified initial encoding state.
+template<typename ET, typename TEP, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::ForwardIterator<IT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    IT first,
+    ranges::difference_type_t<IT> n)
+-> decltype(text::make_text_view<ET, TEP>(std::move(state),
+                                          std::move(first),
+                                          std::move(std::next(first, n))))
+{
+    auto last = std::next(first, n);
+    return text::make_text_view<ET, TEP>(std::move(state),
+                                         std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and implicitly assumed error policy from a ForwardIterator and count pair,
+// and an explicitly specified initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
@@ -433,8 +539,30 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from a ForwardIterator and count pair, and an explicitly specified initial
-// encoding state.
+// and explicitly specified error policy from a ForwardIterator and count pair,
+// and an explicitly specified initial encoding state.
+template<typename TEP, typename IT, typename ET =
+         default_encoding_type_t<ranges::value_type_t<IT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::ForwardIterator<IT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    IT first,
+    ranges::difference_type_t<IT> n)
+-> decltype(text::make_text_view<ET, TEP>(std::move(state),
+                                          std::move(first),
+                                          std::move(std::next(first, n))))
+{
+    auto last = std::next(first, n);
+    return text::make_text_view<ET, TEP>(std::move(state),
+                                         std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from a ForwardIterator and count pair, and an explicitly
+// specified initial encoding state.
 template<typename IT, typename ET =
          default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
@@ -454,8 +582,27 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an explicitly specified encoding type
-// from a ForwardIterator and count pair, and an implicit initial encoding
-// state.
+// and error policy from a ForwardIterator and count pair, and an implicit
+// initial encoding state.
+template<typename ET, typename TEP, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::ForwardIterator<IT>())>
+auto make_text_view(
+    IT first,
+    ranges::difference_type_t<IT> n)
+-> decltype(text::make_text_view<ET, TEP>(std::move(first),
+                                          std::move(std::next(first, n))))
+{
+    auto last = std::next(first, n);
+    return text::make_text_view<ET, TEP>(std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and implicitly assumed error policy from a ForwardIterator and count pair,
+// and an implicit initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
@@ -472,8 +619,27 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from a ForwardIterator and count pair, and an implicit initial encoding
-// state.
+// and explicitly specified error policy from a ForwardIterator and count pair,
+// and an implicit initial encoding state.
+template<typename TEP, typename IT, typename ET =
+         default_encoding_type_t<ranges::value_type_t<IT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::ForwardIterator<IT>())>
+auto make_text_view(
+    IT first,
+    ranges::difference_type_t<IT> n)
+-> decltype(text::make_text_view<ET, TEP>(std::move(first),
+                                          std::move(std::next(first, n))))
+{
+    auto last = std::next(first, n);
+    return text::make_text_view<ET, TEP>(std::move(first),
+                                         std::move(last));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from a ForwardIterator and count pair, and an implicit
+// initial encoding state.
 template<typename IT, typename ET =
          default_encoding_type_t<ranges::value_type_t<IT>>,
 CONCEPT_REQUIRES_(
@@ -490,8 +656,28 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an explicitly specified encoding type
-// from an InputRange const reference and an explicitly specified initial
-// encoding state.
+// and error policy from an InputRange const reference and an explicitly
+// specified initial encoding state.
+template<typename ET, typename TEP, typename RT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::InputRange<RT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    const RT &range)
+-> decltype(text::make_text_view<ET, TEP>(std::move(state),
+                                          text_detail::adl_begin(range),
+                                          text_detail::adl_end(range)))
+{
+    return text::make_text_view<ET, TEP>(std::move(state),
+                                         text_detail::adl_begin(range),
+                                         text_detail::adl_end(range));
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and implicitly assumed error policy from an InputRange const reference and
+// an explicitly specified initial encoding state.
 template<typename ET, typename RT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
@@ -509,8 +695,28 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from an InputRange const reference and an explicitly specified initial
-// encoding state.
+// and explicitly specified error policy from an InputRange const reference
+// and an explicitly specified initial encoding state.
+template<typename TEP, typename RT, typename ET =
+         default_encoding_type_t<ranges::range_value_type_t<RT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::InputRange<RT>())>
+auto make_text_view(
+    typename ET::state_type state,
+    const RT &range)
+-> decltype(text::make_text_view<ET, TEP>(std::move(state),
+                                          text_detail::adl_begin(range),
+                                          text_detail::adl_end(range)))
+{
+    return text::make_text_view<ET, TEP>(std::move(state),
+                                         text_detail::adl_begin(range),
+                                         text_detail::adl_end(range));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from an InputRange const reference and an explicitly
+// specified initial encoding state.
 template<typename RT, typename ET =
          default_encoding_type_t<ranges::range_value_type_t<RT>>,
 CONCEPT_REQUIRES_(
@@ -528,7 +734,25 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an explicitly specified encoding type
-// from an InputRange const reference and an implicit initial encoding state.
+// and error policy from an InputRange const reference and an implicit initial
+// encoding state.
+template<typename ET, typename TEP, typename RT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    ranges::InputRange<RT>())>
+auto make_text_view(
+    const RT &range)
+-> decltype(text::make_text_view<ET, TEP>(text_detail::adl_begin(range),
+                                          text_detail::adl_end(range)))
+{
+    return text::make_text_view<ET, TEP>(text_detail::adl_begin(range),
+                                         text_detail::adl_end(range));
+}
+
+// Overload to construct a text view for an explicitly specified encoding type
+// and implicitly assumed error policy from an InputRange const reference and
+// an implicit initial encoding state.
 template<typename ET, typename RT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
@@ -543,7 +767,25 @@ auto make_text_view(
 }
 
 // Overload to construct a text view for an implicitly assumed encoding type
-// from an InputRange const reference and an implicit initial encoding state.
+// and explicitly specified error policy from an InputRange const reference
+// and an implicit initial encoding state.
+template<typename TEP, typename RT, typename ET =
+         default_encoding_type_t<ranges::range_value_type_t<RT>>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    ranges::InputRange<RT>())>
+auto make_text_view(
+    const RT &range)
+-> decltype(text::make_text_view<ET, TEP>(text_detail::adl_begin(range),
+                                          text_detail::adl_end(range)))
+{
+    return text::make_text_view<ET, TEP>(text_detail::adl_begin(range),
+                                         text_detail::adl_end(range));
+}
+
+// Overload to construct a text view for an implicitly assumed encoding type
+// and error policy from an InputRange const reference and an implicit initial
+// encoding state.
 template<typename RT, typename ET =
          default_encoding_type_t<ranges::range_value_type_t<RT>>,
 CONCEPT_REQUIRES_(
@@ -557,8 +799,30 @@ auto make_text_view(
                                     text_detail::adl_end(range));
 }
 
-// Overload to construct a text view from a text iterator and sentinel pair.
-// The initial encoding state is inferred from the first iterator.
+// Overload to construct a text view with an explicitly specified error policy
+// from a text iterator and sentinel pair.  The initial encoding state is
+// inferred from the first iterator.
+template<typename TEP, typename TIT, typename TST, typename ET =
+         encoding_type_t<TIT>,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    TextInputIterator<TIT>(),
+    TextSentinel<TST, TIT>())>
+auto make_text_view(
+    TIT first,
+    TST last)
+-> decltype(text::make_text_view<ET, TEP>(first.state(),
+                                          first.base(),
+                                          last.base()))
+{
+    return text::make_text_view<ET, TEP>(first.state(),
+                                         first.base(),
+                                         last.base());
+}
+
+// Overload to construct a text view with an implicitly assumed error policy
+// from a text iterator and sentinel pair.  The initial encoding state is
+// inferred from the first iterator.
 template<typename TIT, typename TST, typename ET = encoding_type_t<TIT>,
 CONCEPT_REQUIRES_(
     TextInputIterator<TIT>(),
@@ -571,7 +835,23 @@ auto make_text_view(
     return text::make_text_view<ET>(first.state(), first.base(), last.base());
 }
 
-// Overload to construct a text view from an existing text view.
+// Overload to construct a text view with an explicitly specified error policy
+// from an existing text view.
+template<typename TEP, typename TVT,
+CONCEPT_REQUIRES_(
+    TextErrorPolicy<TEP>(),
+    TextView<TVT>())>
+auto make_text_view(
+    TVT tv)
+-> decltype(text::make_text_view<TEP>(text_detail::adl_begin(tv),
+                                      text_detail::adl_end(tv)))
+{
+    return text::make_text_view<TEP>(text_detail::adl_begin(tv),
+                                     text_detail::adl_end(tv));
+}
+
+// Overload to construct a text view with an implicitly assumed error policy
+// from an existing text view.
 template<typename TVT,
 CONCEPT_REQUIRES_(
     TextView<TVT>())>

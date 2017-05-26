@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -13,6 +13,7 @@
 #include <range/v3/utility/iterator_concepts.hpp>
 #include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/concepts.hpp>
+#include <text_view_detail/error_policy.hpp>
 
 
 namespace std {
@@ -47,6 +48,7 @@ struct character_set_archetype_template
 {
     using code_point_type = CPT;
     static const char* get_name() noexcept;
+    static code_point_type get_substitution_code_point() noexcept;
 };
 using character_set_archetype =
           character_set_archetype_template<code_point_archetype>;
@@ -63,8 +65,8 @@ public:
     using character_set_type = CST;
     using code_point_type = code_point_type_t<CST>;
 
-    character_archetype_template();
-    character_archetype_template(code_point_type cp);
+    character_archetype_template() noexcept;
+    character_archetype_template(code_point_type cp) noexcept;
 
     friend bool operator==(
         const character_archetype_template &l,
@@ -149,19 +151,19 @@ struct text_encoding_archetype_template
 
     template<typename CUIT,
     CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
-    static void encode_state_transition(
+    static encode_status encode_state_transition(
         state_type &state,
         CUIT &out,
         const state_transition_type &stt,
-        int &encoded_code_units);
+        int &encoded_code_units) noexcept;
 
     template<typename CUIT,
     CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
-    static void encode(
+    static encode_status encode(
         state_type &state,
         CUIT &out,
         character_type c,
-        int &encoded_code_units);
+        int &encoded_code_units) noexcept;
 
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
@@ -171,12 +173,12 @@ struct text_encoding_archetype_template
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
-    static bool decode(
+    static decode_status decode(
         state_type &state,
         CUIT &in_next,
         CUST in_end,
         character_type &c,
-        int &decoded_code_units);
+        int &decoded_code_units) noexcept;
 
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
@@ -186,12 +188,12 @@ struct text_encoding_archetype_template
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
         ranges::Sentinel<CUST, CUIT>())>
-    static bool rdecode(
+    static decode_status rdecode(
         state_type &state,
         CUIT &in_next,
         CUST in_end,
         character_type &c,
-        int &decoded_code_units);
+        int &decoded_code_units) noexcept;
 };
 using text_encoding_archetype = text_encoding_archetype_template<
                                     text_encoding_state_archetype,
@@ -203,13 +205,15 @@ using text_encoding_archetype = text_encoding_archetype_template<
 /*
  * Text iterator archetype
  */
-template<typename ET, typename CUIT,
+template<typename ET, typename CUIT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    CodeUnitIterator<CUIT>())>
+    CodeUnitIterator<CUIT>(),
+    TextErrorPolicy<TEP>())>
 class text_iterator_archetype_template {
 public:
     using encoding_type = ET;
+    using error_policy = TEP;
     using state_type = typename ET::state_type;
     using iterator = CUIT;
     using iterator_category = ranges::iterator_category_t<iterator>;
@@ -224,6 +228,8 @@ public:
     const state_type& state() const noexcept;
     state_type& state() noexcept;
     iterator base() const;
+    bool error_occurred() const noexcept;
+    decode_status get_error() const noexcept;
     iterator begin() const;
     iterator end() const;
     reference operator*() const noexcept;
@@ -304,13 +310,15 @@ using text_iterator_archetype = text_iterator_archetype_template<
 /*
  * Text output iterator archetype
  */
-template<typename ET, typename CUIT,
+template<typename ET, typename CUIT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
+    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>(),
+    TextErrorPolicy<TEP>())>
 class text_output_iterator_archetype_template {
 public:
     using encoding_type = ET;
+    using error_policy = TEP;
     using state_type = typename ET::state_type;
     using iterator = CUIT;
     using iterator_category = ranges::iterator_category_t<iterator>;
@@ -325,6 +333,8 @@ public:
     const state_type& state() const noexcept;
     state_type& state() noexcept;
     iterator base() const;
+    bool error_occurred() const noexcept;
+    encode_status get_error() const noexcept;
     reference operator*() const noexcept;
     text_output_iterator_archetype_template& operator++();
     text_output_iterator_archetype_template operator++(int);
@@ -337,14 +347,16 @@ using text_output_iterator_archetype = text_output_iterator_archetype_template<
 /*
  * Text view archetype
  */
-template<typename ET, typename VT,
+template<typename ET, typename VT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    ranges::View<VT>())>
+    ranges::View<VT>(),
+    TextErrorPolicy<TEP>())>
 class text_view_archetype_template {
 public:
     using view_type = VT;
     using encoding_type = ET;
+    using error_policy = TEP;
     using state_type = typename ET::state_type;
     using code_unit_iterator = ranges::iterator_t<VT>;
     using iterator = text_iterator_archetype_template<ET, code_unit_iterator>;

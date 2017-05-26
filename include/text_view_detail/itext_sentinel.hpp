@@ -11,6 +11,7 @@
 #include <iterator>
 #include <range/v3/range_traits.hpp>
 #include <text_view_detail/concepts.hpp>
+#include <text_view_detail/error_policy.hpp>
 #include <text_view_detail/itext_iterator.hpp>
 
 
@@ -19,42 +20,44 @@ namespace experimental {
 inline namespace text {
 
 
-template<typename ET, typename VT,
+template<typename ET, typename VT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    ranges::View<VT>())>
+    ranges::View<VT>(),
+    TextErrorPolicy<TEP>())>
 class itext_sentinel {
 public:
     using view_type = VT;
+    using error_policy = TEP;
     using sentinel =
         ranges::sentinel_t<typename std::add_const<VT>::type>;
 
     itext_sentinel() = default;
 
     itext_sentinel(sentinel s)
-        : s{s} {}
+        : s(std::move(s)) {}
 
     friend bool operator==(
-        const itext_iterator<ET, VT> &ti,
+        const itext_iterator<ET, VT, TEP> &ti,
         const itext_sentinel &ts)
     {
         return ts.equal(ti);
     }
     friend bool operator!=(
-        const itext_iterator<ET, VT> &ti,
+        const itext_iterator<ET, VT, TEP> &ti,
         const itext_sentinel &ts)
     {
         return !(ti == ts);
     }
     friend bool operator==(
         const itext_sentinel &ts,
-        const itext_iterator<ET, VT> &ti)
+        const itext_iterator<ET, VT, TEP> &ti)
     {
         return ti == ts;
     }
     friend bool operator!=(
         const itext_sentinel &ts,
-        const itext_iterator<ET, VT> &ti)
+        const itext_iterator<ET, VT, TEP> &ti)
     {
         return !(ts == ti);
     }
@@ -67,7 +70,7 @@ private:
     CONCEPT_REQUIRES(
         ! ranges::ForwardIterator<
               decltype(std::declval<const itext_iterator<ET, VT>&>().base())>())
-    bool equal(const itext_iterator<ET, VT> &ti) const {
+    bool equal(const itext_iterator<ET, VT, TEP> &ti) const {
         // For input iterators, the base iterator corresponds to the next input
         // to be decoded.  Naively checking for base comparison only therefore
         // results in premature matches when the last code point in the input
@@ -81,8 +84,8 @@ private:
     }
     CONCEPT_REQUIRES(
         ranges::ForwardIterator<
-              decltype(std::declval<const itext_iterator<ET, VT>&>().base())>())
-    bool equal(const itext_iterator<ET, VT> &ti) const {
+              decltype(std::declval<const itext_iterator<ET, VT, TEP>&>().base())>())
+    bool equal(const itext_iterator<ET, VT, TEP> &ti) const {
         return ti.base() == base();
     }
 

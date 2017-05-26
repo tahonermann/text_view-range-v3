@@ -22,10 +22,8 @@ https://groups.google.com/d/forum/text_view
 - [Current features and limitations](#current-features-and-limitations)
 - [Requirements](#requirements)
 - [Build and installation](#build-and-installation)
-  - [Building and installing range-v3]
-    (#building-and-installing-range-v3)
-  - [Building and installing Text_view for range-v3]
-    (#building-and-installing-text_view-for-range-v3)
+  - [Building and installing range-v3](#building-and-installing-range-v3)
+  - [Building and installing Text_view for range-v3](#building-and-installing-text_view-for-range-v3)
 - [Usage](#usage)
 - [Supported Encodings](#supported-encodings)
 - [Terminology](#terminology)
@@ -59,13 +57,6 @@ $ git clone https://github.com/ericniebler/range-v3.git range-v3
 $ cd range-v3
 $ git checkout e07976393f8811d06c14cebed111005462a4b98c
 ```
-
-## Building and installing [Text_view for range-v3][Text_view-range-v3]
-[Text_view for range-v3][Text_view-range-v3] is currently a header-only
-library, so no build or installation is currently required to use it.  It is
-unlikely that [Text_view for range-v3][Text_view-range-v3] will remain a
-header-only library in the future, so at some point, a build and installation
-step will be required.
 
 [Text_view for range-v3][Text_view-range-v3] has a [CMake] based build system
 sufficient to build and run its tests, to validate example code, and to perform
@@ -135,7 +126,30 @@ $ ctest
 ```
 
 # Usage
-See the [Text_view documentation](https://github.com/tahonermann/text_view/blob/master/README.md#usage).
+[Text_view for range-v3][Text_view-range-v3] installations include a [CMake]
+package configuration file suitable for use in [CMake] based projects.  To use
+it, specify `text_view_range_v3` as the `<package>` argument to `find_package`
+in your [CMake] file and add invocations of `target_link_libraries` for each
+relevant target with the `<lib>` argument set to `text-view-range-v3`.  This
+will automatically apply compiler and linker options required to use
+[Text_view for range-v3][Text_view-range-v3] to each target.  See the
+`CMakeLists.txt` files for the utilities under the `examples` directory for
+reference.  If [Text_view for range-v3][Text_view-range-v3] was installed to a
+non-default installation location (`-DCMAKE_INSTALL_PREFIX` was specified),
+then it may be necessary to set `CMAKE_PREFIX_PATH` to the
+[Text_view for range-v3][Text_view-range-v3] installation location (the location
+`CMAKE_INSTALL_PREFIX` was set to) or `text_view_range_v3_DIR` to the directory
+containing the installed `text_view_range_v3-config.cmake` file, so that the
+[Text_view for range-v3][Text_view-range-v3] package configuration file is
+found.  It is also possible to use the build directory as a (non-relocatable)
+installation directory by setting The `CMAKE_PREFIX_PATH` or
+`text_view_range_v3_DIR` variables appropriately.  See the [CMake] documentation
+for more details.  The `CMakeLists.txt` files provided with the installed
+examples exemplify a minimal [CMake] based build system for a downstream
+consumer of [Text_view for range-v3][Text_view-range-v3].
+
+See the [Text_view documentation](https://github.com/tahonermann/text_view/blob/master/README.md#usage)
+for additional details.
 
 # Supported Encodings
 See the [Text_view documentation](https://github.com/tahonermann/text_view/blob/master/README.md#supported-encodings).

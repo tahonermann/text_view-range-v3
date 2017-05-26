@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -8,11 +8,14 @@
 #define TEXT_VIEW_ITEXT_ITERATOR_HPP
 
 
+#include <cassert>
 #include <iterator>
 #include <range/v3/range_traits.hpp>
 #include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/adl_customization.hpp>
 #include <text_view_detail/concepts.hpp>
+#include <text_view_detail/error_policy.hpp>
+#include <text_view_detail/exceptions.hpp>
 #include <text_view_detail/iterator_preserve.hpp>
 #include <text_view_detail/subobject.hpp>
 
@@ -23,6 +26,45 @@ inline namespace text {
 
 
 namespace text_detail {
+
+template<typename ET,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>())>
+class character_or_error {
+    using character_type = character_type_t<ET>;
+
+public:
+    bool has_character() const noexcept {
+        return have_character;
+    }
+
+    void set_character(character_type c) noexcept {
+        u.c = c;
+        have_character = true;
+    }
+    character_type& get_character() {
+        assert(have_character);
+        return u.c;
+    }
+    const character_type& get_character() const {
+        return const_cast<character_or_error*>(this)->get_character();
+    }
+
+    void set_error(decode_status ds) noexcept {
+        u.ds = ds;
+        have_character = false;
+    }
+    decode_status get_error() const noexcept {
+        return have_character ? decode_status::no_error : u.ds;
+    }
+
+private:
+    union {
+        decode_status ds;
+        character_type c;
+    } u = { decode_status::no_error };
+    bool have_character = false;
+};
 
 template<typename ET, typename CUIT, typename Enable = void>
 struct itext_iterator_category;
@@ -253,10 +295,11 @@ private:
 /*
  * itext_iterator
  */
-template<typename ET, typename VT,
+template<typename ET, typename VT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     ranges::View<VT>(),
+    TextErrorPolicy<TEP>(),
     TextDecoder<
         ET,
         ranges::iterator_t<
@@ -269,6 +312,7 @@ class itext_iterator
 public:
     using encoding_type = typename itext_iterator::encoding_type;
     using view_type = typename itext_iterator::view_type;
+    using error_policy = TEP;
     using state_type = typename itext_iterator::state_type;
     using value_type = typename itext_iterator::value_type;
     using iterator_category = typename itext_iterator::iterator_category;
@@ -285,13 +329,16 @@ private:
             : self(self), value(self.value)
         {}
 
-        reference operator*() const noexcept {
-            return value;
+        reference operator*() const {
+            return self.dereference(value);
+        }
+        pointer operator->() const {
+            return &self.dereference(value);
         }
 
     private:
         itext_iterator& self;
-        value_type value;
+        text_detail::character_or_error<encoding_type> value;
     };
 
 public:
@@ -307,20 +354,26 @@ public:
         ++*this;
     }
 
+    bool error_occurred() const noexcept {
+        return text::error_occurred(value.get_error());
+    }
+
+    decode_status get_error() const noexcept {
+        return value.get_error();
+    }
+
     // Iterators that are not ok include:
     // - Singular iterators.
     // - Past the end iterators.
-    // - Iterators for which a decoding error occurred during increment or
-    //   decrement operations.
     bool is_ok() const noexcept {
         return ok;
     }
 
-    reference operator*() const noexcept {
-        return { value };
+    reference operator*() const {
+        return dereference(value);
     }
-    pointer operator->() const noexcept {
-        return &value;
+    pointer operator->() const {
+        return &dereference(value);
     }
 
     friend bool operator==(
@@ -379,15 +432,20 @@ public:
         while (preserved_base.get() != end) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::decode(
+            decode_status ds = encoding_type::decode(
                 this->mutable_state(),
                 preserved_base.get(),
                 end,
                 tmp_value,
                 decoded_code_units);
             preserved_base.update();
-            if (decoded_code_point) {
-                value = tmp_value;
+            if (text::error_occurred(ds)) {
+                value.set_error(ds);
+                ok = true;
+                break;
+            }
+            else if (ds == decode_status::no_error) {
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -405,15 +463,20 @@ public:
         while (tmp_iterator != end) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::decode(
+            decode_status ds = encoding_type::decode(
                 this->mutable_state(),
                 tmp_iterator,
                 end,
                 tmp_value,
                 decoded_code_units);
             this->mutable_base_range().last = tmp_iterator;
-            if (decoded_code_point) {
-                value = tmp_value;
+            if (text::error_occurred(ds)) {
+                value.set_error(ds);
+                ok = true;
+                break;
+            }
+            else if (ds == decode_status::no_error) {
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -449,15 +512,20 @@ public:
         while (rcurrent != rend) {
             value_type tmp_value;
             int decoded_code_units = 0;
-            bool decoded_code_point = encoding_type::rdecode(
+            decode_status ds = encoding_type::rdecode(
                 this->mutable_state(),
                 rcurrent,
                 rend,
                 tmp_value,
                 decoded_code_units);
             this->mutable_base_range().first = rcurrent.base();
-            if (decoded_code_point) {
-                value = tmp_value;
+            if (text::error_occurred(ds)) {
+                value.set_error(ds);
+                ok = true;
+                break;
+            }
+            else if (ds == decode_status::no_error) {
+                value.set_character(tmp_value);
                 ok = true;
                 break;
             }
@@ -563,7 +631,30 @@ private:
     }
 
 private:
-    value_type value = {};
+    static const value_type& dereference(
+        const text_detail::character_or_error<encoding_type> &coe)
+    {
+        if (coe.has_character()) {
+            return coe.get_character();
+        }
+        if (std::is_base_of<
+                text_permissive_error_policy,
+                error_policy
+            >::value)
+        {
+            // Permissive error policy: return the substitution
+            // character.
+            using CT = character_type_t<encoding_type>;
+            using CST = character_set_type_t<CT>;
+            static CT c{CST::get_substitution_code_point()};
+            return c;
+        } else {
+            // Strict error policy: throw an exception.
+            throw text_decode_error{coe.get_error()};
+        }
+    }
+
+    text_detail::character_or_error<encoding_type> value;
     bool ok = false;
 };
 

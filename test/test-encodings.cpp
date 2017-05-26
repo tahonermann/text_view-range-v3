@@ -1,10 +1,10 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
 // and conditions.
 
-// Ensure assert is enabled regardless of build type
+// Ensure assert is enabled regardless of build type.
 #if defined(NDEBUG)
 #undef NDEBUG
 #endif
@@ -29,6 +29,7 @@
 #include <text_view_detail/advance_to.hpp>
 #include <text_view_detail/riterator.hpp>
 #include <text_view_detail/to_array.hpp>
+#include "test_adapters.hpp"
 
 
 using namespace std;
@@ -73,203 +74,6 @@ int character_count(const code_unit_map_sequence<ET> &code_unit_maps) {
     return result;
 }
 
-// Input iterator model.  The standard doesn't provide input iterator types that
-// don't also satisfy forward iterator requirements or impose additional
-// requirements.  istream_iterator, for example, requires a char_traits
-// specialization for its character type.
-template<typename IT,
-CONCEPT_REQUIRES_(ranges::InputIterator<IT>())>
-class input_iterator
-    : public iterator<
-                 input_iterator_tag,
-                 typename iterator_traits<IT>::value_type,
-                 typename iterator_traits<IT>::difference_type,
-                 typename iterator_traits<IT>::pointer,
-                 typename iterator_traits<IT>::reference>
-{
-public:
-    input_iterator() = default;
-    input_iterator(IT it) : it(it) {}
-
-    friend bool operator==(
-        const input_iterator &l,
-        const input_iterator &r)
-    {
-        return l.it == r.it;
-    }
-    friend bool operator!=(
-        const input_iterator &l,
-        const input_iterator &r)
-    {
-        return !(l == r);
-    }
-
-    auto operator*() const -> typename iterator_traits<IT>::reference {
-        return *it;
-    }
-
-    auto operator++() -> input_iterator& {
-        ++it;
-        return *this;
-    }
-    auto operator++(int) -> input_iterator {
-        input_iterator tmp{*this};
-        ++*this;
-        return tmp;
-    }
-
-private:
-    IT it;
-};
-
-
-// Output iterator model.  The standard doesn't provide output iterator types
-// that don't also satisfy forward iterator requirements or impose additional
-// requirements.  ostream_iterator, for example, requires a char_traits
-// specialization for its character type.
-template<
-    typename IT,
-    typename T,
-CONCEPT_REQUIRES_(ranges::OutputIterator<IT, T>())>
-class output_iterator
-    : public iterator<
-                 output_iterator_tag,
-                 typename iterator_traits<IT>::value_type,
-                 typename iterator_traits<IT>::difference_type,
-                 typename iterator_traits<IT>::pointer,
-                 typename iterator_traits<IT>::reference>
-{
-public:
-    output_iterator() = default;
-    output_iterator(IT it) : it(it) {}
-
-    auto operator*() -> output_iterator& {
-        return *this;
-    }
-    void operator=(const T& t) {
-        *it = t;
-    }
-
-    auto operator++() -> output_iterator& {
-        ++it;
-        return *this;
-    }
-    auto operator++(int) -> output_iterator {
-        output_iterator tmp{*this};
-        ++*this;
-        return tmp;
-    }
-
-private:
-    IT it;
-};
-
-
-// View model.  The standard doesn't provide a container type with input
-// iterators that aren't also forward, bidirectional, or random access
-// iterators.  input_range_view is used to provide wrapped input iterators
-// for another container type.
-template<typename RT,
-CONCEPT_REQUIRES_(ranges::InputRange<RT>())>
-class input_range_view {
-public:
-    input_range_view() = default;
-    input_range_view(RT &r) : r(&r) {}
-
-    auto begin() const
-        -> input_iterator<decltype(text_detail::adl_begin(declval<const RT>()))>
-    {
-        return input_iterator<
-            decltype(text_detail::adl_begin(declval<const RT>()))>{text_detail::adl_begin(*r)};
-    }
-    auto end() const
-        -> input_iterator<decltype(text_detail::adl_end(declval<const RT>()))>
-    {
-        return input_iterator<
-            decltype(text_detail::adl_end(declval<const RT>()))>{text_detail::adl_end(*r)};
-    }
-
-private:
-    RT *r;
-};
-
-
-// Range model with different return types for begin() and end().
-template<typename RT,
-CONCEPT_REQUIRES_(ranges::InputRange<RT>())>
-class iterable_view {
-public:
-    using range_type = RT;
-    using iterator =
-        typename ranges::iterator_t<
-            typename std::add_const<RT>::type>;
-
-    class sentinel {
-    public:
-        sentinel() = default;
-        explicit sentinel(iterator i) : i{i} {}
-
-        friend bool operator==(
-            const sentinel &l,
-            const sentinel &r)
-        {
-            // Sentinels always compare equal regardless of any internal state.
-            // See N4128, 10.1 "Sentinel Equality".
-            return true;
-        }
-        friend bool operator!=(
-            const sentinel &l,
-            const sentinel &r)
-        {
-            return !(l == r);
-        }
-
-        friend bool operator==(
-            const iterator &i,
-            const sentinel &s)
-        {
-            return i == s.i;
-        }
-        friend bool operator!=(
-            const iterator &i,
-            const sentinel &s)
-        {
-            return !(i == s);
-        }
-        friend bool operator==(
-            const sentinel &s,
-            const iterator &i)
-        {
-            return i == s;
-        }
-        friend bool operator!=(
-            const sentinel &s,
-            const iterator &i)
-        {
-            return !(s == i);
-        }
-
-        iterator base() const {
-            return i;
-        }
-
-    private:
-        iterator i;
-    };
-
-    iterable_view(range_type &r) : r{r} {}
-
-    iterator begin() const {
-        return text_detail::adl_begin(r);
-    }
-    sentinel end() const {
-        return sentinel{text_detail::adl_end(r)};
-    }
-
-private:
-    range_type &r;
-};
-
 
 // Constructs a view from an array reference (that may correspond to a string
 // literal) that holds a C style string with a null character terminator.  The
@@ -283,387 +87,6 @@ make_cstr_view(const CUT (&cstr)[N]) {
     return view_type{cstr, cstr + (N - 1)};
 }
 
-
-void test_code_unit_models() {
-    // Archetypes
-    static_assert(CodeUnit<code_unit_archetype>(), "");
-    // std
-    static_assert(CodeUnit<char>(), "");
-    static_assert(CodeUnit<wchar_t>(), "");
-    static_assert(CodeUnit<char16_t>(), "");
-    static_assert(CodeUnit<char32_t>(), "");
-    static_assert(CodeUnit<unsigned char>(), "");
-    static_assert(CodeUnit<unsigned short>(), "");
-    static_assert(CodeUnit<unsigned int>(), "");
-    static_assert(CodeUnit<unsigned long>(), "");
-    static_assert(CodeUnit<unsigned long long>(), "");
-}
-
-void test_code_point_models() {
-    // Archetypes
-    static_assert(CodePoint<code_point_archetype>(), "");
-    // std
-    static_assert(CodePoint<char>(), "");
-    static_assert(CodePoint<wchar_t>(), "");
-    static_assert(CodePoint<char16_t>(), "");
-    static_assert(CodePoint<char32_t>(), "");
-    static_assert(CodePoint<unsigned char>(), "");
-    static_assert(CodePoint<unsigned short>(), "");
-    static_assert(CodePoint<unsigned int>(), "");
-    static_assert(CodePoint<unsigned long>(), "");
-    static_assert(CodePoint<unsigned long long>(), "");
-}
-
-void test_character_set_models() {
-    // Archetypes
-    static_assert(CharacterSet<character_set_archetype>(), "");
-    // std
-    static_assert(CharacterSet<execution_character_set>(), "");
-    static_assert(CharacterSet<execution_wide_character_set>(), "");
-    static_assert(CharacterSet<universal_character_set>(), "");
-    static_assert(CharacterSet<any_character_set>(), "");
-}
-
-void test_character_models() {
-    // Archetypes
-    static_assert(Character<character_archetype>(), "");
-    // std
-    static_assert(Character<character<execution_character_set>>(), "");
-    static_assert(Character<character<execution_wide_character_set>>(), "");
-    static_assert(Character<character<universal_character_set>>(), "");
-    static_assert(Character<character<any_character_set>>(), "");
-}
-
-void test_code_unit_iterator_models() {
-    // Archetypes
-    static_assert(CodeUnitIterator<code_unit_iterator_archetype>(), "");
-    // std
-    static_assert(CodeUnitIterator<char*>(), "");
-    static_assert(CodeUnitIterator<const char*>(), "");
-    static_assert(CodeUnitIterator<wchar_t*>(), "");
-    static_assert(CodeUnitIterator<char16_t*>(), "");
-    static_assert(CodeUnitIterator<char32_t*>(), "");
-}
-
-void test_code_unit_output_iterator_models() {
-    // Archetypes
-    static_assert(CodeUnitOutputIterator<code_unit_output_iterator_archetype, code_unit_archetype>(), "");
-    // std
-    static_assert(CodeUnitOutputIterator<char*, char>(), "");
-    static_assert(CodeUnitOutputIterator<wchar_t*, wchar_t>(), "");
-    static_assert(CodeUnitOutputIterator<char16_t*, char16_t>(), "");
-    static_assert(CodeUnitOutputIterator<char32_t*, char32_t>(), "");
-}
-
-void test_text_encoding_state_models() {
-    // Archetypes
-    static_assert(TextEncodingState<text_encoding_state_archetype>(), "");
-    // std
-    static_assert(TextEncodingState<trivial_encoding_state>(), "");
-    static_assert(TextEncodingState<utf8bom_encoding_state>(), "");
-    static_assert(TextEncodingState<utf16bom_encoding_state>(), "");
-    static_assert(TextEncodingState<utf32bom_encoding_state>(), "");
-}
-
-void test_text_encoding_state_transition_models() {
-    // Archetypes
-    static_assert(TextEncodingStateTransition<text_encoding_state_transition_archetype>(), "");
-    // std
-    static_assert(TextEncodingStateTransition<trivial_encoding_state_transition>(), "");
-    static_assert(TextEncodingStateTransition<utf8bom_encoding_state_transition>(), "");
-    static_assert(TextEncodingStateTransition<utf16bom_encoding_state_transition>(), "");
-    static_assert(TextEncodingStateTransition<utf32bom_encoding_state_transition>(), "");
-}
-
-void test_text_encoding_models() {
-    // Archetypes
-    static_assert(TextEncoding<text_encoding_archetype>(), "");
-    // std
-    static_assert(TextEncoding<utf8_encoding>(), "");
-    static_assert(TextEncoding<utf16_encoding>(), "");
-    static_assert(TextEncoding<utf16be_encoding>(), "");
-    static_assert(TextEncoding<utf16le_encoding>(), "");
-    static_assert(TextEncoding<utf32_encoding>(), "");
-    static_assert(TextEncoding<utf32be_encoding>(), "");
-    static_assert(TextEncoding<utf32le_encoding>(), "");
-    static_assert(TextEncoding<basic_execution_character_encoding>(), "");
-    static_assert(TextEncoding<basic_execution_wide_character_encoding>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextEncoding<iso_10646_wide_character_encoding>(), "");
-#endif
-    static_assert(TextEncoding<execution_character_encoding>(), "");
-    static_assert(TextEncoding<execution_wide_character_encoding>(), "");
-    static_assert(TextEncoding<char8_character_encoding>(), "");
-    static_assert(TextEncoding<char16_character_encoding>(), "");
-    static_assert(TextEncoding<char32_character_encoding>(), "");
-}
-
-void test_text_encoder_models() {
-    // Archetypes
-    static_assert(TextEncoder<
-                      text_encoding_archetype,
-                      code_unit_iterator_archetype>(), "");
-    // std
-    static_assert(TextEncoder<
-                      execution_character_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      execution_wide_character_encoding,
-                      wchar_t*>(), "");
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextEncoder<
-                      char8_character_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      char16_character_encoding,
-                      char16_t*>(), "");
-    static_assert(TextEncoder<
-                      char32_character_encoding,
-                      char32_t*>(), "");
-    static_assert(TextEncoder<
-                      basic_execution_character_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      basic_execution_wide_character_encoding,
-                      wchar_t*>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextEncoder<
-                      iso_10646_wide_character_encoding,
-                      wchar_t*>(), "");
-#endif // __STDC_ISO_10646__
-    static_assert(TextEncoder<
-                      utf8_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf8bom_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf16_encoding,
-                      char16_t*>(), "");
-    static_assert(TextEncoder<
-                      utf16be_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf16le_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf16bom_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf32_encoding,
-                      char32_t*>(), "");
-    static_assert(TextEncoder<
-                      utf32be_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf32le_encoding,
-                      char*>(), "");
-    static_assert(TextEncoder<
-                      utf32bom_encoding,
-                      char*>(), "");
-}
-
-void test_text_decoder_models() {
-    // Archetypes
-    static_assert(TextRandomAccessDecoder<
-                      text_encoding_archetype,
-                      code_unit_iterator_archetype>(), "");
-    // std
-    static_assert(TextForwardDecoder<
-                      execution_character_encoding,
-                      char*>(), "");
-    static_assert(TextForwardDecoder<
-                      execution_wide_character_encoding,
-                      wchar_t*>(), "");
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextBidirectionalDecoder<
-                      char8_character_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      char16_character_encoding,
-                      char16_t*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      char32_character_encoding,
-                      char32_t*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      basic_execution_character_encoding,
-                      char*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      basic_execution_wide_character_encoding,
-                      wchar_t*>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextRandomAccessDecoder<
-                      iso_10646_wide_character_encoding,
-                      wchar_t*>(), "");
-#endif // __STDC_ISO_10646__
-    static_assert(TextBidirectionalDecoder<
-                      utf8_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf8bom_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf16_encoding,
-                      char16_t*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf16be_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf16le_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf16bom_encoding,
-                      char*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      utf32_encoding,
-                      char32_t*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      utf32be_encoding,
-                      char*>(), "");
-    static_assert(TextRandomAccessDecoder<
-                      utf32le_encoding,
-                      char*>(), "");
-    static_assert(TextBidirectionalDecoder<
-                      utf32bom_encoding,
-                      char*>(), "");
-
-    // Expected model failures.
-    static_assert(! TextRandomAccessDecoder<
-                      utf8_encoding,
-                      char*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf8bom_encoding,
-                      char*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf16_encoding,
-                      char16_t*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf16be_encoding,
-                      char*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf16le_encoding,
-                      char*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf16bom_encoding,
-                      char*>(), "");
-    static_assert(! TextRandomAccessDecoder<
-                      utf32bom_encoding,
-                      char*>(), "");
-}
-
-void test_text_iterator_models() {
-    // Archetypes
-    static_assert(TextIterator<text_iterator_archetype>(), "");
-    static_assert(TextIterator<text_view_archetype::iterator>(), "");
-    // std input iterators
-    static_assert(TextIterator<itext_iterator<basic_execution_character_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<basic_execution_wide_character_encoding, text_detail::basic_view<wchar_t*>>>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextIterator<itext_iterator<iso_10646_wide_character_encoding, text_detail::basic_view<wchar_t*>>>(), "");
-#endif
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextIterator<itext_iterator<utf8_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf8bom_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf16_encoding, text_detail::basic_view<char16_t*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf16be_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf16le_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf16bom_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf32_encoding, text_detail::basic_view<char32_t*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf32be_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf32le_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextIterator<itext_iterator<utf32bom_encoding, text_detail::basic_view<char*>>>(), "");
-}
-
-void test_text_sentinel_models() {
-    // Archetypes
-    static_assert(TextSentinel<text_iterator_archetype, text_iterator_archetype>(), "");
-    static_assert(TextSentinel<
-                      ranges::sentinel_t<text_view_archetype>,
-                      ranges::iterator_t<text_view_archetype>>(), "");
-    // std sentinels
-    static_assert(TextSentinel<
-                      itext_sentinel<basic_execution_character_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<basic_execution_character_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<basic_execution_wide_character_encoding, text_detail::basic_view<wchar_t*>>,
-                      itext_iterator<basic_execution_wide_character_encoding, text_detail::basic_view<wchar_t*>>>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextSentinel<
-                      itext_sentinel<iso_10646_wide_character_encoding, text_detail::basic_view<wchar_t*>>,
-                      itext_iterator<iso_10646_wide_character_encoding, text_detail::basic_view<wchar_t*>>>(), "");
-#endif
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextSentinel<
-                      itext_sentinel<utf8_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf8_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf8bom_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf8bom_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf16_encoding, text_detail::basic_view<char16_t*>>,
-                      itext_iterator<utf16_encoding, text_detail::basic_view<char16_t*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf16be_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf16be_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf16le_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf16le_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf16bom_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf16bom_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf32_encoding, text_detail::basic_view<char32_t*>>,
-                      itext_iterator<utf32_encoding, text_detail::basic_view<char32_t*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf32be_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf32be_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf32le_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf32le_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextSentinel<
-                      itext_sentinel<utf32bom_encoding, text_detail::basic_view<char*>>,
-                      itext_iterator<utf32bom_encoding, text_detail::basic_view<char*>>>(), "");
-}
-
-void test_text_output_iterator_models() {
-    // Archetypes
-    static_assert(TextOutputIterator<text_output_iterator_archetype>(), "");
-    static_assert(TextOutputIterator<otext_iterator<text_encoding_archetype, code_unit_iterator_archetype>>(), "");
-    // std output iterators
-    static_assert(TextOutputIterator<otext_iterator<basic_execution_character_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<basic_execution_wide_character_encoding, wchar_t*>>(), "");
-#if defined(__STDC_ISO_10646__)
-    static_assert(TextOutputIterator<otext_iterator<iso_10646_wide_character_encoding, wchar_t*>>(), "");
-#endif
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextOutputIterator<otext_iterator<utf8_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf8bom_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf16_encoding, char16_t*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf16be_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf16le_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf16bom_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf32_encoding, char32_t*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf32be_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf32le_encoding, char*>>(), "");
-    static_assert(TextOutputIterator<otext_iterator<utf32bom_encoding, char*>>(), "");
-}
-
-void test_text_view_models() {
-    // Archetypes
-    static_assert(TextView<text_view_archetype>(), "");
-    // std
-    static_assert(TextView<text_view>(), "");
-    static_assert(TextView<wtext_view>(), "");
-    static_assert(TextView<u8text_view>(), "");
-    static_assert(TextView<u16text_view>(), "");
-    static_assert(TextView<u32text_view>(), "");
-    static_assert(TextView<basic_text_view<execution_character_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextView<basic_text_view<execution_wide_character_encoding, text_detail::basic_view<wchar_t*>>>(), "");
-    // FIXME: If P0482 were to be adopted, replace char with char8_t.
-    static_assert(TextView<basic_text_view<char8_character_encoding, text_detail::basic_view<char*>>>(), "");
-    static_assert(TextView<basic_text_view<char16_character_encoding, text_detail::basic_view<char16_t*>>>(), "");
-    static_assert(TextView<basic_text_view<char32_character_encoding, text_detail::basic_view<char32_t*>>>(), "");
-}
 
 // Test any_character_set.
 void test_any_character_set() {
@@ -724,7 +147,7 @@ void test_forward_encode(
 
 // Test forward encoding of the state transitions and characters present in
 // 'code_unit_maps' and ensure that the encoded code units match.  'it' is
-// expected to be i forward, bidirectional, or random access terator for this
+// expected to be a forward, bidirectional, or random access iterator for this
 // test.  Characters are encoded via 'it' which must write the resulting code
 // units to the container reflected by 'code_unit_range'.
 template<
@@ -778,31 +201,62 @@ void test_forward_decode(
     const RT &code_unit_range,
     TVT tv)
 {
-    // Validate pre-increment iteration.
+    // Validate pre-increment iteration with dereference.
     auto tvit = begin(tv);
     for (const auto &cum : code_unit_maps) {
         for (auto c : cum.characters) {
             // Decode and advance.
             assert(tvit != end(tv));
-            auto tvcp = *tvit;
+            auto tvc = *tvit;
             ++tvit;
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
         }
     }
     // Validate base code unit iterators.
     assert(tvit.base() == end(code_unit_range));
     assert(tvit == end(tv));
 
-    // Validate post-increment iteration.
+    // Validate pre-increment iteration with class member access.
     tvit = begin(tv);
     for (const auto &cum : code_unit_maps) {
         for (auto c : cum.characters) {
             // Decode and advance.
             assert(tvit != end(tv));
-            auto tvcp = *tvit++;
+            auto tvcp = tvit->get_code_point();
+            ++tvit;
+            // Validate the decoded code point.
+            assert(tvcp == c.get_code_point());
+        }
+    }
+    // Validate base code unit iterators.
+    assert(tvit.base() == end(code_unit_range));
+    assert(tvit == end(tv));
+
+    // Validate post-increment iteration with dereference.
+    tvit = begin(tv);
+    for (const auto &cum : code_unit_maps) {
+        for (auto c : cum.characters) {
+            // Decode and advance.
+            assert(tvit != end(tv));
+            auto tvc = *tvit++;
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
+        }
+    }
+    // Validate base code unit iterators.
+    assert(tvit.base() == end(code_unit_range));
+    assert(tvit == end(tv));
+
+    // Validate post-increment iteration with class member access.
+    tvit = begin(tv);
+    for (const auto &cum : code_unit_maps) {
+        for (auto c : cum.characters) {
+            // Decode and advance.
+            assert(tvit != end(tv));
+            auto tvcp = tvit++->get_code_point();
+            // Validate the decoded code point.
+            assert(tvcp == c.get_code_point());
         }
     }
     // Validate base code unit iterators.
@@ -861,10 +315,11 @@ void test_forward_decode(
                 begin(cum.code_units)));
             // Decode and advance.
             assert(tvit != end(tv));
-            auto tvcp = *tvit;
+            auto tvc = *tvit;
+            assert(tvc.get_code_point() == tvit->get_code_point());
             ++tvit;
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
         }
     }
     // Validate iteration to the end.
@@ -903,9 +358,11 @@ void test_forward_decode(
                 begin(cum.code_units)));
             // Decode and advance.
             assert(tvit != end(tv));
-            auto tvcp = *tvit++;
+            auto tvit2 = tvit;
+            auto tvc = *tvit++;
+            assert(tvc.get_code_point() == tvit2++->get_code_point());
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
         }
     }
     // Validate iteration to the end.
@@ -967,7 +424,9 @@ void test_reverse_decode(
         } else for (auto c : cum.characters) {
             // Decode and decrement.
             assert(tvit != begin(tv));
-            auto tvcp = *--tvit;
+            auto tvit2 = tvit;
+            auto tvc = *--tvit;
+            assert(tvc.get_code_point() == (--tvit2)->get_code_point());
             // Validate base code unit iterators.
             assert(end(tvit.base_range()) == rcuit.base());
             advance(rcuit, cum.code_units.size());
@@ -979,7 +438,7 @@ void test_reverse_decode(
                 end(tvit.base_range()),
                 begin(cum.code_units)));
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
         }
     }
     // Validate iteration to the beginning.
@@ -1009,7 +468,8 @@ void test_reverse_decode(
             // Decode and decrement.
             assert(tvit != begin(tv));
             tvit--;
-            auto tvcp = *tvit;
+            auto tvc = *tvit;
+            assert(tvc.get_code_point() == tvit->get_code_point());
             // Validate base code unit iterators.
             assert(end(tvit.base_range()) == rcuit.base());
             advance(rcuit, cum.code_units.size());
@@ -1021,19 +481,13 @@ void test_reverse_decode(
                 end(tvit.base_range()),
                 begin(cum.code_units)));
             // Validate the decoded character.
-            assert(tvcp == c);
+            assert(tvc == c);
         }
     }
     // Validate iteration to the beginning.
     assert(tvit == begin(tv));
     assert(rcuit == text_detail::rend(code_unit_range));
 }
-
-// Test reverse decoding of the code unit sequence present in the
-// 'code_unit_range' range using the 'tv' text view of that range.  The
-// 'code_unit_maps' sequence provides the state transitions, characters, and
-// code unit sequences to compare against.  'tv' is expected to provide
-// bidirectional or random access iterators for this test.
 
 // Test random access decoding of the code unit sequence present in the
 // 'code_unit_range' range using the 'tv' text view of that range.  The
@@ -1105,8 +559,10 @@ void test_random_decode(
            == begin(tv));
     assert(-num_characters + text_detail::advance_to(begin(tv), end(tv))
            == begin(tv));
-    assert(text_detail::advance_to(begin(tv), end(tv))[-num_characters]
-           == *begin(tv));
+    if (num_characters > 0) {
+        assert(text_detail::advance_to(begin(tv), end(tv))[-num_characters]
+               == *begin(tv));
+    }
     tvit = begin(tv);
     tvit += num_characters;
     assert(tvit == end(tv));
@@ -1146,7 +602,7 @@ void test_forward_encoding(
         num_code_units,
         code_unit_type{});
     using base_iterator_type =
-        output_iterator<decltype(begin(container)), code_unit_type>;
+        output_iterator_adapter<decltype(begin(container)), code_unit_type>;
     base_iterator_type base_iterator(begin(container));
     auto it = make_otext_iterator<ET>(base_iterator);
     static_assert(TextOutputIterator<decltype(it)>(),"");
@@ -1200,7 +656,7 @@ void test_forward_encoding(
         }
     }
     auto input_container =
-        input_range_view<forward_list<code_unit_type>>{container};
+        input_range_view_adapter<forward_list<code_unit_type>>{container};
     auto tv = make_text_view<ET>(input_container);
     static_assert(TextInputView<decltype(tv)>(),"");
     static_assert(! TextForwardView<decltype(tv)>(),"");
@@ -1257,7 +713,7 @@ void test_forward_encoding(
             container.push_back(cu);
         }
     }
-    iterable_view<decltype(container)> iv_container{container};
+    iterable_view_adapter<decltype(container)> iv_container{container};
     auto tv = make_text_view<ET>(iv_container);
     static_assert(TextInputView<decltype(tv)>(),"");
     test_forward_decode(code_unit_maps, iv_container, tv);
@@ -1314,7 +770,7 @@ void test_bidirectional_encoding(
             container.push_back(cu);
         }
     }
-    iterable_view<decltype(container)> iv_container{container};
+    iterable_view_adapter<decltype(container)> iv_container{container};
     auto tv = make_text_view<ET>(iv_container);
     static_assert(TextBidirectionalView<decltype(tv)>(),"");
     test_reverse_decode(code_unit_maps, iv_container, tv);
@@ -1467,7 +923,7 @@ void test_construct_text_view(
     test_text_view(code_unit_maps_without_terminator,
                    make_cstr_view(cstr),
                    tv14);
-                             
+
     // Test initialization with an implicit initial state and result of make_cstr_view().
     TVT tv15 = {make_cstr_view(cstr)};
     test_text_view(code_unit_maps_without_terminator,
@@ -1479,13 +935,13 @@ void test_construct_text_view(
     test_text_view(code_unit_maps_without_terminator,
                    VT{begin(begin(tv15).base_range()), end(end(tv15).base_range())},
                    tv16);
-                             
+
     // Test initialization via the copy constructor.
     TVT tv17 = {tv2}; // Note: used to test move construction below.
     test_text_view(code_unit_maps_with_terminator,
                    VT{&cstr[0], &cstr[cstr_length]},
                    tv17);
-                             
+
     // Test initialization via the move constructor.
     TVT tv18 = {move(tv17)};
     test_text_view(code_unit_maps_with_terminator,
@@ -1631,6 +1087,48 @@ void test_make_text_view(
     test_text_view(code_unit_maps_with_terminator,
                    ary,
                    make_text_view(begin(tv1), end(tv1)));
+}
+
+template<typename ET,
+CONCEPT_REQUIRES_(TextEncoding<ET>())>
+void test_noexcept_encoding() {
+    using ST = typename ET::state_type;
+    using STT = typename ET::state_transition_type;
+    using CT = character_type_t<ET>;
+    using CUT = code_unit_type_t<ET>;
+
+    // Validate that encode and decode operations are non-throwing when used
+    // with non-throwing code unit iterators.
+    static_assert(
+        noexcept(ET::encode_state_transition(
+            std::declval<ST&>(),
+            std::declval<CUT*&>(),
+            std::declval<STT>(),
+            std::declval<int&>())),
+        "");
+    static_assert(
+        noexcept(ET::encode(
+            std::declval<ST&>(),
+            std::declval<CUT*&>(),
+            std::declval<CT>(),
+            std::declval<int&>())),
+        "");
+    static_assert(
+        noexcept(ET::decode(
+            std::declval<ST&>(),
+            std::declval<CUT*&>(),
+            std::declval<CUT*>(),
+            std::declval<CT&>(),
+            std::declval<int&>())),
+        "");
+    static_assert(
+        noexcept(ET::rdecode(
+            std::declval<ST&>(),
+            std::declval<CUT*&>(),
+            std::declval<CUT*>(),
+            std::declval<CT&>(),
+            std::declval<int&>())),
+        "");
 }
 
 void test_text_view() {
@@ -1874,6 +1372,8 @@ void test_utf8_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 1);
     assert(end(tvit.base_range()) == begin(encoded_string) + 5);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf8bom_encoding() {
@@ -1951,6 +1451,8 @@ void test_utf8bom_encoding() {
     assert(begin(tvit.base_range()) == begin(encoded_string_bom) + 8);
     assert(end(tvit.base_range()) == begin(encoded_string_bom) + 11);
     }
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf16_encoding() {
@@ -1977,6 +1479,8 @@ void test_utf16_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 1);
     assert(end(tvit.base_range()) == begin(encoded_string) + 3);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf16be_encoding() {
@@ -2009,6 +1513,8 @@ void test_utf16be_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 2);
     assert(end(tvit.base_range()) == begin(encoded_string) + 6);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf16le_encoding() {
@@ -2041,6 +1547,8 @@ void test_utf16le_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 2);
     assert(end(tvit.base_range()) == begin(encoded_string) + 6);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf16bom_encoding() {
@@ -2153,6 +1661,8 @@ void test_utf16bom_encoding() {
     assert(begin(tvit.base_range()) == begin(encoded_string_le_bom) + 8);
     assert(end(tvit.base_range()) == begin(encoded_string_le_bom) + 10);
     }
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf32_encoding() {
@@ -2179,6 +1689,8 @@ void test_utf32_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 1);
     assert(end(tvit.base_range()) == begin(encoded_string) + 2);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf32be_encoding() {
@@ -2211,6 +1723,8 @@ void test_utf32be_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 4);
     assert(end(tvit.base_range()) == begin(encoded_string) + 8);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf32le_encoding() {
@@ -2243,6 +1757,8 @@ void test_utf32le_encoding() {
     auto tvit = find(begin(tv), end(tv), CT{U'\U00011141'});
     assert(begin(tvit.base_range()) == begin(encoded_string) + 4);
     assert(end(tvit.base_range()) == begin(encoded_string) + 8);
+
+    test_noexcept_encoding<ET>();
 }
 
 void test_utf32bom_encoding() {
@@ -2355,25 +1871,11 @@ void test_utf32bom_encoding() {
     assert(begin(tvit.base_range()) == begin(encoded_string_le_bom) + 12);
     assert(end(tvit.base_range()) == begin(encoded_string_le_bom) + 16);
     }
+
+    test_noexcept_encoding<ET>();
 }
 
 int main() {
-    test_code_unit_models();
-    test_code_point_models();
-    test_character_set_models();
-    test_character_models();
-    test_code_unit_iterator_models();
-    test_code_unit_output_iterator_models();
-    test_text_encoding_state_models();
-    test_text_encoding_state_transition_models();
-    test_text_encoding_models();
-    test_text_encoder_models();
-    test_text_decoder_models();
-    test_text_iterator_models();
-    test_text_sentinel_models();
-    test_text_output_iterator_models();
-    test_text_view_models();
-
     test_any_character_set();
 
     test_text_view();

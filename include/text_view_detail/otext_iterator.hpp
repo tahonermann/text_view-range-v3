@@ -1,4 +1,4 @@
-// Copyright (c) 2016, Tom Honermann
+// Copyright (c) 2017, Tom Honermann
 //
 // This file is distributed under the MIT License. See the accompanying file
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -11,6 +11,7 @@
 #include <iterator>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/default_encoding.hpp>
+#include <text_view_detail/error_policy.hpp>
 #include <text_view_detail/iterator_preserve.hpp>
 #include <text_view_detail/subobject.hpp>
 
@@ -23,10 +24,11 @@ inline namespace text {
 /*
  * otext_iterator
  */
-template<typename ET, typename CUIT,
+template<typename ET, typename CUIT, typename TEP = text_default_error_policy,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
-    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>())>
+    CodeUnitOutputIterator<CUIT, code_unit_type_t<ET>>(),
+    TextErrorPolicy<TEP>())>
 class otext_iterator
     : private text_detail::subobject<typename ET::state_type>
 {
@@ -34,6 +36,7 @@ class otext_iterator
 
 public:
     using encoding_type = ET;
+    using error_policy = TEP;
     using state_type = typename ET::state_type;
     using state_transition_type = typename ET::state_transition_type;
     using iterator = CUIT;
@@ -51,7 +54,8 @@ public:
         iterator current)
     :
         base_type{std::move(state)},
-        current(std::move(current))
+        current(std::move(current)),
+        es{encode_status::no_error}
     {}
 
     const state_type& state() const noexcept {
@@ -60,6 +64,14 @@ public:
 
     const iterator& base() const noexcept {
         current;
+    }
+
+    bool error_occurred() const noexcept {
+        return text::error_occurred(es);
+    }
+
+    encode_status get_error() const noexcept {
+        return es;
     }
 
     otext_iterator& operator*() const noexcept {
@@ -81,9 +93,22 @@ public:
         // actual output iterator).
         auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
-        encoding_type::encode_state_transition(
+        es = encoding_type::encode_state_transition(
             mutable_state(), preserved_current.get(), stt, encoded_code_units);
         preserved_current.update();
+        if (error_occurred()) {
+            if (std::is_base_of<
+                    text_permissive_error_policy,
+                    error_policy
+                >::value)
+            {
+                // Permissive error policy: ignore the error as there is no
+                // reasonable substitute state transition to encode.
+            } else {
+                // Strict error policy: throw an exception.
+                throw text_encode_error{es};
+            }
+        }
         return *this;
     }
 
@@ -95,9 +120,29 @@ public:
         // actual output iterator).
         auto preserved_current = text_detail::make_iterator_preserve(current);
         int encoded_code_units = 0;
-        encoding_type::encode(
+        es = encoding_type::encode(
             mutable_state(), preserved_current.get(), value, encoded_code_units);
         preserved_current.update();
+        if (error_occurred()) {
+            if (std::is_base_of<
+                    text_permissive_error_policy,
+                    error_policy
+                >::value)
+            {
+                // Permissive error policy: attempt to encode the substitution
+                // character.
+                using CT = character_type_t<encoding_type>;
+                using CST = character_set_type_t<CT>;
+                CT c;
+                c.set_code_point(CST::get_substitution_code_point());
+                es = encoding_type::encode(
+                    mutable_state(), preserved_current.get(), c, encoded_code_units);
+                preserved_current.update();
+            } else {
+                // Strict error policy: throw an exception.
+                throw text_encode_error{es};
+            }
+        }
         return *this;
     }
 
@@ -107,6 +152,7 @@ private:
     }
 
     mutable iterator current;
+    encode_status es = encode_status::no_error;
 };
 
 
@@ -114,8 +160,23 @@ private:
  * make_otext_iterator
  */
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and an explicitly specified initial
-// encoding state.
+// encoding type and error policy from an output iterator and an explicitly
+// specified initial encoding state.
+template<typename ET, typename TEP, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
+otext_iterator<ET, IT, TEP> make_otext_iterator(
+    typename ET::state_type state,
+    IT out)
+{
+    return otext_iterator<ET, IT, TEP>{std::move(state), std::move(out)};
+}
+
+// Overload to construct an output text iterator for an explicitly specified
+// encoding type and an implicitly assumed error policy from an output iterator
+// and an explicitly specified initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
@@ -128,7 +189,22 @@ otext_iterator<ET, IT> make_otext_iterator(
 }
 
 // Overload to construct an output text iterator for an explicitly specified
-// encoding from an output iterator and an implicit initial encoding state.
+// encoding type and error policy from an output iterator and an implicit
+// initial encoding state.
+template<typename ET, typename TEP, typename IT,
+CONCEPT_REQUIRES_(
+    TextEncoding<ET>(),
+    TextErrorPolicy<TEP>(),
+    CodeUnitOutputIterator<IT, code_unit_type_t<ET>>())>
+otext_iterator<ET, IT, TEP> make_otext_iterator(
+    IT out)
+{
+    return otext_iterator<ET, IT, TEP>{ET::initial_state(), std::move(out)};
+}
+
+// Overload to construct an output text iterator for an explicitly specified
+// encoding type and an implicitly assumed error policy from an output iterator
+// and an implicit initial encoding state.
 template<typename ET, typename IT,
 CONCEPT_REQUIRES_(
     TextEncoding<ET>(),

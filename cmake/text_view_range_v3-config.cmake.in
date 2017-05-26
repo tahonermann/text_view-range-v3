@@ -1,4 +1,4 @@
-# Copyright (c) 2016, Tom Honermann
+# Copyright (c) 2017, Tom Honermann
 #
 # This file is distributed under the MIT License. See the accompanying file
 # LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
@@ -19,16 +19,4 @@ if(NOT Range-v3_FOUND)
   find_package(Range-v3 MODULE REQUIRED)
 endif()
 
-set(text_view_range_v3_PROPERTIES
-      ${RANGE_V3_PROPERTIES})
-
-set(text_view_range_v3_COMPILE_OPTIONS
-      ${RANGE_V3_COMPILE_OPTIONS})
-
-set(text_view_range_v3_DEFINITIONS
-      ${RANGE_V3_DEFINITIONS})
-
-set(text_view_range_v3_INCLUDE_DIRS
-      ${RANGE_V3_INCLUDE_DIRS}
-      ${PACKAGE_PREFIX_DIR}/include
-      CACHE FILE "Text_view-range-v3 include dirs")
+include("${CMAKE_CURRENT_LIST_DIR}/text_view_range_v3-targets.cmake")
