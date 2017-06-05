@@ -600,14 +600,6 @@ struct TextView
             ranges::concepts::model_of<
                 CodeUnitIterator, typename T::code_unit_iterator
             >(),
-            ranges::concepts::convertible_to<typename T::view_type&>(
-                t.base()
-            ),
-            ranges::concepts::is_true(
-                std::integral_constant<bool,
-                    noexcept(t.base())
-                >{}
-            ),
             ranges::concepts::convertible_to<const typename T::view_type&>(
                 ct<T>().base()
             ),
