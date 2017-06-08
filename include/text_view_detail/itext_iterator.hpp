@@ -66,6 +66,32 @@ private:
     bool have_character = false;
 };
 
+
+template<typename I, typename Enable = void>
+struct itext_current_iterator_type;
+template<typename I>
+struct itext_current_iterator_type<
+           I,
+           typename std::enable_if<
+               (bool)ranges::InputIterator<I>() &&
+               ! (bool)ranges::ForwardIterator<I>()>::type>
+{
+    using type = caching_iterator<I>;
+};
+template<typename I>
+struct itext_current_iterator_type<
+           I,
+           typename std::enable_if<
+               (bool)ranges::ForwardIterator<I>()>::type>
+{
+    using type = I;
+};
+
+template<typename I>
+using itext_current_iterator_type_t =
+    typename itext_current_iterator_type<I>::type;
+
+
 template<typename ET, typename CUIT, typename Enable = void>
 struct itext_iterator_category;
 
@@ -73,8 +99,8 @@ template<typename ET, typename CUIT>
 struct itext_iterator_category<
            ET, CUIT,
            typename std::enable_if<
-               (bool)TextDecoder<ET, CUIT>() &&
-               ! (bool)TextForwardDecoder<ET, CUIT>()>::type>
+               (bool)ranges::InputIterator<CUIT>() &&
+               ! (bool)ranges::ForwardIterator<CUIT>()>::type>
 {
     using type = std::input_iterator_tag;
 };
@@ -170,12 +196,10 @@ class itext_iterator_data<
           typename std::enable_if<
               (bool)TextEncoding<ET>() &&
               (bool)ranges::View<VT>() &&
-              (bool)TextDecoder<
-                  ET,
+              (bool)ranges::InputIterator<
                   ranges::iterator_t<
                       typename std::add_const<VT>::type>>() &&
-              ! (bool)TextForwardDecoder<
-                          ET,
+              ! (bool)ranges::ForwardIterator<
                           ranges::iterator_t<
                               typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
@@ -235,8 +259,7 @@ class itext_iterator_data<
           typename std::enable_if<
               (bool)TextEncoding<ET>() &&
               (bool)ranges::View<VT>() &&
-              (bool)TextForwardDecoder<
-                  ET,
+              (bool)ranges::ForwardIterator<
                   ranges::iterator_t<
                       typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
@@ -304,10 +327,11 @@ CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     ranges::View<VT>(),
     TextErrorPolicy<TEP>(),
-    TextDecoder<
+    TextForwardDecoder<
         ET,
-        ranges::iterator_t<
-            typename std::add_const<VT>::type>>())>
+        text_detail::itext_current_iterator_type_t<
+            ranges::iterator_t<
+                typename std::add_const<VT>::type>>>())>
 class itext_iterator
     : public text_detail::itext_iterator_data<ET, VT>
 {

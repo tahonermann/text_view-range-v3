@@ -290,9 +290,9 @@ struct TextEncoder
 
 
 /*
- * Text decoder concept
+ * Text forward decoder concept
  */
-struct TextDecoder
+struct TextForwardDecoder
     : ranges::concepts::refines<TextEncoding(ranges::concepts::_1)>
 {
     template<typename T>
@@ -307,7 +307,7 @@ struct TextDecoder
     auto requires_(T &&, CUIT &&in) -> decltype(
         ranges::concepts::valid_expr(
             ranges::concepts::model_of<
-                ranges::concepts::InputIterator, CUIT
+                ranges::concepts::ForwardIterator, CUIT
             >(),
             ranges::concepts::model_of<
                 ranges::concepts::ConvertibleTo,
@@ -317,26 +317,6 @@ struct TextDecoder
             ranges::concepts::convertible_to<decode_status>(
                 T::decode(s<T>(), in, in, c<T>(), decoded_code_units())
             )
-        )
-    );
-};
-
-
-/*
- * Text forward decoder concept
- */
-struct TextForwardDecoder
-    : ranges::concepts::refines<
-          TextDecoder(
-              ranges::concepts::_1,
-              ranges::concepts::_2)>
-{
-    template<typename T, typename CUIT>
-    auto requires_(T &&, CUIT &&) -> decltype(
-        ranges::concepts::valid_expr(
-            ranges::concepts::model_of<
-                ranges::concepts::ForwardIterator, CUIT
-            >()
         )
     );
 };
@@ -723,9 +703,6 @@ using TextEncoding = ranges::concepts::models<concepts::TextEncoding, T>;
 
 template<typename T, typename CUIT>
 using TextEncoder = ranges::concepts::models<concepts::TextEncoder, T, CUIT>;
-
-template<typename T, typename CUIT>
-using TextDecoder = ranges::concepts::models<concepts::TextDecoder, T, CUIT>;
 
 template<typename T, typename CUIT>
 using TextForwardDecoder = ranges::concepts::models<concepts::TextForwardDecoder, T, CUIT>;

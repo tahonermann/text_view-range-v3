@@ -168,7 +168,7 @@ struct text_encoding_archetype_template
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
-        ranges::InputIterator<CUIT>(),
+        ranges::ForwardIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
@@ -183,7 +183,7 @@ struct text_encoding_archetype_template
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
-        ranges::InputIterator<CUIT>(),
+        ranges::ForwardIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
