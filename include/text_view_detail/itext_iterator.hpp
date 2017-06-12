@@ -13,10 +13,10 @@
 #include <range/v3/range_traits.hpp>
 #include <range/v3/utility/iterator_traits.hpp>
 #include <text_view_detail/adl_customization.hpp>
+#include <text_view_detail/caching_iterator.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/error_policy.hpp>
 #include <text_view_detail/exceptions.hpp>
-#include <text_view_detail/iterator_preserve.hpp>
 #include <text_view_detail/subobject.hpp>
 
 
@@ -66,6 +66,32 @@ private:
     bool have_character = false;
 };
 
+
+template<typename I, typename Enable = void>
+struct itext_current_iterator_type;
+template<typename I>
+struct itext_current_iterator_type<
+           I,
+           typename std::enable_if<
+               (bool)ranges::InputIterator<I>() &&
+               ! (bool)ranges::ForwardIterator<I>()>::type>
+{
+    using type = caching_iterator<I>;
+};
+template<typename I>
+struct itext_current_iterator_type<
+           I,
+           typename std::enable_if<
+               (bool)ranges::ForwardIterator<I>()>::type>
+{
+    using type = I;
+};
+
+template<typename I>
+using itext_current_iterator_type_t =
+    typename itext_current_iterator_type<I>::type;
+
+
 template<typename ET, typename CUIT, typename Enable = void>
 struct itext_iterator_category;
 
@@ -73,8 +99,8 @@ template<typename ET, typename CUIT>
 struct itext_iterator_category<
            ET, CUIT,
            typename std::enable_if<
-               (bool)TextDecoder<ET, CUIT>() &&
-               ! (bool)TextForwardDecoder<ET, CUIT>()>::type>
+               (bool)ranges::InputIterator<CUIT>() &&
+               ! (bool)ranges::ForwardIterator<CUIT>()>::type>
 {
     using type = std::input_iterator_tag;
 };
@@ -170,12 +196,10 @@ class itext_iterator_data<
           typename std::enable_if<
               (bool)TextEncoding<ET>() &&
               (bool)ranges::View<VT>() &&
-              (bool)TextDecoder<
-                  ET,
+              (bool)ranges::InputIterator<
                   ranges::iterator_t<
                       typename std::add_const<VT>::type>>() &&
-              ! (bool)TextForwardDecoder<
-                          ET,
+              ! (bool)ranges::ForwardIterator<
                           ranges::iterator_t<
                               typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
@@ -199,22 +223,32 @@ protected:
         current(std::move(current))
     {}
 
-    iterator& mutable_base() noexcept {
-        return current;
-    }
-
     const view_type* underlying_view() const noexcept {
         return view;
     }
 
 public:
     const iterator& base() const noexcept {
-        return current;
+        return current.base();
+    }
+
+    auto base_range() const noexcept
+    -> decltype(std::declval<const caching_iterator<iterator>>().cached_range())
+    {
+        return current.cached_range();
+    }
+
+    auto look_ahead_range() const noexcept
+    -> decltype(std::declval<const caching_iterator<iterator>>().look_ahead_range())
+    {
+        return current.look_ahead_range();
     }
 
 private:
     const view_type *view;
-    iterator current;
+
+protected:
+    caching_iterator<iterator> current;
 };
 
 // Specialization for forward views.
@@ -225,8 +259,7 @@ class itext_iterator_data<
           typename std::enable_if<
               (bool)TextEncoding<ET>() &&
               (bool)ranges::View<VT>() &&
-              (bool)TextForwardDecoder<
-                  ET,
+              (bool)ranges::ForwardIterator<
                   ranges::iterator_t<
                       typename std::add_const<VT>::type>>()>::type>
 : public itext_iterator_base<ET, VT>
@@ -263,14 +296,6 @@ protected:
         iterator last;
     };
 
-    iterator& mutable_base() noexcept {
-        return current_view.first;
-    }
-
-    current_view_type& mutable_base_range() noexcept {
-        return current_view;
-    }
-
     const view_type* underlying_view() const noexcept {
         return view;
     }
@@ -286,6 +311,8 @@ public:
 
 private:
     const view_type *view;
+
+protected:
     current_view_type current_view;
 };
 
@@ -300,10 +327,11 @@ CONCEPT_REQUIRES_(
     TextEncoding<ET>(),
     ranges::View<VT>(),
     TextErrorPolicy<TEP>(),
-    TextDecoder<
+    TextForwardDecoder<
         ET,
-        ranges::iterator_t<
-            typename std::add_const<VT>::type>>())>
+        text_detail::itext_current_iterator_type_t<
+            ranges::iterator_t<
+                typename std::add_const<VT>::type>>>())>
 class itext_iterator
     : public text_detail::itext_iterator_data<ET, VT>
 {
@@ -426,19 +454,18 @@ public:
         ! TextForwardDecoder<encoding_type, iterator>())
     itext_iterator& operator++() {
         ok = false;
-        auto preserved_base =
-            text_detail::make_iterator_preserve(this->mutable_base());
-        auto end(text_detail::adl_end(*this->underlying_view()));
-        while (preserved_base.get() != end) {
+        this->current.clear_cache();
+        auto end = text_detail::make_caching_iterator_sentinel(
+                       text_detail::adl_end(*this->underlying_view()));
+        while (this->current != end) {
             value_type tmp_value;
             int decoded_code_units = 0;
             decode_status ds = encoding_type::decode(
                 this->mutable_state(),
-                preserved_base.get(),
+                this->current,
                 end,
                 tmp_value,
                 decoded_code_units);
-            preserved_base.update();
             if (text::error_occurred(ds)) {
                 value.set_error(ds);
                 ok = true;
@@ -449,6 +476,10 @@ public:
                 ok = true;
                 break;
             }
+            // Clear the cache prior to looping to maintain consistency with
+            // forward iterators; non-character encoding sequences are not
+            // reflected in base_range().
+            this->current.clear_cache();
         }
         return *this;
     }
@@ -457,8 +488,8 @@ public:
         TextForwardDecoder<encoding_type, iterator>())
     itext_iterator& operator++() {
         ok = false;
-        this->mutable_base_range().first = this->base_range().last;
-        iterator tmp_iterator{this->base_range().first};
+        this->current_view.first = this->current_view.last;
+        iterator tmp_iterator{this->current_view.first};
         auto end(text_detail::adl_end(*this->underlying_view()));
         while (tmp_iterator != end) {
             value_type tmp_value;
@@ -469,7 +500,7 @@ public:
                 end,
                 tmp_value,
                 decoded_code_units);
-            this->mutable_base_range().last = tmp_iterator;
+            this->current_view.last = tmp_iterator;
             if (text::error_occurred(ds)) {
                 value.set_error(ds);
                 ok = true;
@@ -480,7 +511,7 @@ public:
                 ok = true;
                 break;
             }
-            this->mutable_base_range().first = this->base_range().last;
+            this->current_view.first = this->current_view.last;
         }
         return *this;
     }
@@ -505,8 +536,8 @@ public:
         TextBidirectionalDecoder<encoding_type, iterator>())
     itext_iterator& operator--() {
         ok = false;
-        this->mutable_base_range().last = this->base_range().first;
-        std::reverse_iterator<iterator> rcurrent{this->base_range().last};
+        this->current_view.last = this->current_view.first;
+        std::reverse_iterator<iterator> rcurrent{this->current_view.last};
         std::reverse_iterator<iterator> rend{
             text_detail::adl_begin(*this->underlying_view())};
         while (rcurrent != rend) {
@@ -518,7 +549,7 @@ public:
                 rend,
                 tmp_value,
                 decoded_code_units);
-            this->mutable_base_range().first = rcurrent.base();
+            this->current_view.first = rcurrent.base();
             if (text::error_occurred(ds)) {
                 value.set_error(ds);
                 ok = true;
@@ -529,7 +560,7 @@ public:
                 ok = true;
                 break;
             }
-            this->mutable_base_range().last = this->base_range().first;
+            this->current_view.last = this->current_view.first;
         }
         return *this;
     }
@@ -546,11 +577,11 @@ public:
         TextRandomAccessDecoder<encoding_type, iterator>())
     itext_iterator& operator+=(difference_type n) {
         if (n < 0) {
-            this->mutable_base_range().first +=
+            this->current_view.first +=
                 ((n+1) * encoding_type::max_code_units);
             --*this;
         } else if (n > 0) {
-            this->mutable_base_range().last +=
+            this->current_view.last +=
                 ((n-1) * encoding_type::max_code_units);
             ++*this;
         }
@@ -597,7 +628,7 @@ public:
         const itext_iterator &l,
         const itext_iterator &r)
     {
-        return (l.base_range().first - r.base_range().first) /
+        return (l.current_view.first - r.current_view.first) /
                encoding_type::max_code_units;
     }
 

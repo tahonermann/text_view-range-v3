@@ -188,6 +188,19 @@ using caching_iterator =
 
 
 /*
+ * make_caching_iterator
+ */
+template<typename I,
+CONCEPT_REQUIRES_(
+    ranges::InputIterator<I>(),
+    ! ranges::ForwardIterator<I>())>
+caching_iterator<I>
+make_caching_iterator(I i) {
+    return { i };
+}
+
+
+/*
  * caching_iterator_sentinel
  */
 template<typename S>
@@ -259,6 +272,15 @@ private:
     sentinel s;
 };
 
+
+/*
+ * make_caching_iterator_sentinel
+ */
+template<typename S>
+caching_iterator_sentinel<S>
+make_caching_iterator_sentinel(S s) {
+    return { s };
+}
 
 
 } // namespace text_detail

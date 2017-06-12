@@ -168,7 +168,7 @@ struct text_encoding_archetype_template
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
-        ranges::InputIterator<CUIT>(),
+        ranges::ForwardIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
@@ -183,7 +183,7 @@ struct text_encoding_archetype_template
     template<typename CUIT, typename CUST,
     CONCEPT_REQUIRES_(
         CodeUnitIterator<CUIT>(),
-        ranges::InputIterator<CUIT>(),
+        ranges::ForwardIterator<CUIT>(),
         ranges::ConvertibleTo<
             ranges::value_type_t<CUIT>,
             code_unit_type>(),
@@ -364,7 +364,6 @@ public:
     text_view_archetype_template();
     text_view_archetype_template(const state_type &initial_state, VT r);
     const VT& base() const noexcept;
-    VT& base() noexcept;
     const state_type& initial_state() const noexcept;
     state_type& initial_state() noexcept;
     iterator begin() const;
