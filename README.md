@@ -6,6 +6,8 @@ AppVeyor CI (Windows:Clang/C2)
 
 [![Coverity Scan status](https://scan.coverity.com/projects/11588/badge.svg)](https://scan.coverity.com/projects/tahonermann-text_view-range-v3)
 
+[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
+
 # [Text_view for range-v3][Text_view-range-v3]
 A [range-v3] based character encoding and code point enumeration library.
 
