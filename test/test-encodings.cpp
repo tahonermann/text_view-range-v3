@@ -1379,6 +1379,7 @@ void test_utf8_encoding() {
     // table 3-7 in chapter 3.9, "Unicode Encoding Forms".
     CUMS code_unit_maps{
         { {}, { CT{U'\0'}         }, { CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01) } },
         { {}, { CT{U'\U0000007F'} }, { CUT(0x7F) } },
         { {}, { CT{U'\U00000080'} }, { CUT(0xC2), CUT(0x80) } },
         { {}, { CT{U'\U000007FF'} }, { CUT(0xDF), CUT(0xBF) } },
@@ -1440,6 +1441,7 @@ void test_utf8bom_encoding() {
         { { STT::to_assume_bom_written_state() },
               {},                    {} },
         { {}, { CT{U'\0'}         }, { CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01) } },
         { {}, { CT{U'\U0000007F'} }, { CUT(0x7F) } },
         { {}, { CT{U'\U00000080'} }, { CUT(0xC2), CUT(0x80) } },
         { {}, { CT{U'\U000007FF'} }, { CUT(0xDF), CUT(0xBF) } },
@@ -1467,6 +1469,7 @@ void test_utf8bom_encoding() {
     CUMS code_unit_maps_bom{
         { {}, {},                    { CUT(0xEF), CUT(0xBB), CUT(0xBF) } }, // BOM
         { {}, { CT{U'\0'}         }, { CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01) } },
         { {}, { CT{U'\U0000007F'} }, { CUT(0x7F) } },
         { {}, { CT{U'\U00000080'} }, { CUT(0xC2), CUT(0x80) } },
         { {}, { CT{U'\U000007FF'} }, { CUT(0xDF), CUT(0xBF) } },
@@ -1533,13 +1536,18 @@ void test_utf16_encoding() {
     CUMS code_unit_maps_empty{};
     test_bidirectional_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { 0x0041 } },
-        { {}, { CT{U'\U00000141'} }, { 0x0141 } },
-        { {}, { CT{U'\U00001141'} }, { 0x1141 } },
-        { {}, { CT{U'\U00011141'} }, { 0xD804, 0xDD41 } },
-        { {}, { CT{U'\0'} },         { 0x0000 } } };
+        { {}, { CT{U'\0'}         }, { 0x0000 } },
+        { {}, { CT{U'\U00000001'} }, { 0x0001 } },
+        { {}, { CT{U'\U0000D7FF'} }, { 0xD7FF } },
+        { {}, { CT{U'\U0000E000'} }, { 0xE000 } },
+        { {}, { CT{U'\U0000FEFF'} }, { 0xFEFF } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { 0xFFFD } },
+        { {}, { CT{U'\U0000FFFE'} }, { 0xFFFE } },
+        { {}, { CT{U'\U0000FFFF'} }, { 0xFFFF } },
+        { {}, { CT{U'\U00010000'} }, { 0xD800, 0xDC00 } },
+        { {}, { CT{U'\U0010FFFF'} }, { 0xDBFF, 0xDFFF } } };
     test_bidirectional_encoding<ET>(code_unit_maps);
 
     u16string encoded_string(u"a\U00011141z");
@@ -1567,13 +1575,18 @@ void test_utf16be_encoding() {
     CUMS code_unit_maps_empty{};
     test_bidirectional_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x01), CUT(0x41) } },
-        { {}, { CT{U'\U00001141'} }, { CUT(0x11), CUT(0x41) } },
-        { {}, { CT{U'\U00011141'} }, { CUT(0xD8), CUT(0x04), CUT(0xDD), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0xE0), CUT(0x00) } },
+        { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFE), CUT(0xFF) } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0xD8), CUT(0x00), CUT(0xDC), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xDB), CUT(0xFF), CUT(0xDF), CUT(0xFF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps);
 
     string encoded_string("\x00\x61\xD8\x04\xDD\x41\x00\x7A", 8);
@@ -1601,13 +1614,18 @@ void test_utf16le_encoding() {
     CUMS code_unit_maps_empty{};
     test_bidirectional_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { CUT(0x41), CUT(0x00) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x41), CUT(0x01) } },
-        { {}, { CT{U'\U00001141'} }, { CUT(0x41), CUT(0x11) } },
-        { {}, { CT{U'\U00011141'} }, { CUT(0x04), CUT(0xD8), CUT(0x41), CUT(0xDD) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01), CUT(0x00) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xFF), CUT(0xD7) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0xE0) } },
+        { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFF), CUT(0xFE) } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFD), CUT(0xFF) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFE), CUT(0xFF) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0xD8), CUT(0x00), CUT(0xDC) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xFF), CUT(0xDB), CUT(0xFF), CUT(0xDF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps);
 
     string encoded_string("\x61\x00\x04\xD8\x41\xDD\x7A\x00", 8);
@@ -1654,21 +1672,31 @@ void test_utf16bom_encoding() {
     CUMS code_unit_maps_no_bom{
         { { STT::to_assume_bom_written_state() },
               {},                    {} },
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x01), CUT(0x41) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0xE0), CUT(0x00) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFE), CUT(0xFF) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0xD8), CUT(0x04), CUT(0xDD), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0xD8), CUT(0x00), CUT(0xDC), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xDB), CUT(0xFF), CUT(0xDF), CUT(0xFF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_no_bom);
 
     // Test a code unit sequence containing a BE BOM.
     CUMS code_unit_maps_be_bom{
         { {}, {},                    { CUT(0xFE), CUT(0xFF) } }, // BE BOM
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x01), CUT(0x41) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0xE0), CUT(0x00) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFE), CUT(0xFF) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0xD8), CUT(0x04), CUT(0xDD), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0xD8), CUT(0x00), CUT(0xDC), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xDB), CUT(0xFF), CUT(0xDF), CUT(0xFF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_be_bom);
 
     // Test a code unit sequence containing a LE BOM.  This requires an explicit
@@ -1676,11 +1704,16 @@ void test_utf16bom_encoding() {
     CUMS code_unit_maps_le_bom{
         { { STT::to_le_bom_written_state() },
               {},                    { CUT(0xFF), CUT(0xFE) } }, // LE BOM
-        { {}, { CT{U'\U00000041'} }, { CUT(0x41), CUT(0x00) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x41), CUT(0x01) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01), CUT(0x00) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xFF), CUT(0xD7) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0xE0) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFF), CUT(0xFE) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0x04), CUT(0xD8), CUT(0x41), CUT(0xDD) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFD), CUT(0xFF) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFE), CUT(0xFF) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0xD8), CUT(0x00), CUT(0xDC) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xFF), CUT(0xDB), CUT(0xFF), CUT(0xDF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_le_bom);
 
     {
@@ -1743,13 +1776,18 @@ void test_utf32_encoding() {
     CUMS code_unit_maps_empty{};
     test_random_access_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { 0x00000041 } },
-        { {}, { CT{U'\U00000141'} }, { 0x00000141 } },
-        { {}, { CT{U'\U00001141'} }, { 0x00001141 } },
-        { {}, { CT{U'\U00011141'} }, { 0x00011141 } },
-        { {}, { CT{U'\0'} },         { 0x00000000 } } };
+        { {}, { CT{U'\0'}         }, { 0x00000000 } },
+        { {}, { CT{U'\U00000001'} }, { 0x00000001 } },
+        { {}, { CT{U'\U0000D7FF'} }, { 0x0000D7FF } },
+        { {}, { CT{U'\U0000E000'} }, { 0x0000E000 } },
+        { {}, { CT{U'\U0000FEFF'} }, { 0x0000FEFF } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { 0x0000FFFD } },
+        { {}, { CT{U'\U0000FFFE'} }, { 0x0000FFFE } },
+        { {}, { CT{U'\U0000FFFF'} }, { 0x0000FFFF } },
+        { {}, { CT{U'\U00010000'} }, { 0x00010000 } },
+        { {}, { CT{U'\U0010FFFF'} }, { 0x0010FFFF } } };
     test_random_access_encoding<ET>(code_unit_maps);
 
     u32string encoded_string(U"a\U00011141z");
@@ -1777,13 +1815,18 @@ void test_utf32be_encoding() {
     CUMS code_unit_maps_empty{};
     test_random_access_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x00), CUT(0x00), CUT(0x01), CUT(0x41) } },
-        { {}, { CT{U'\U00001141'} }, { CUT(0x00), CUT(0x00), CUT(0x11), CUT(0x41) } },
-        { {}, { CT{U'\U00011141'} }, { CUT(0x00), CUT(0x01), CUT(0x11), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0x00), CUT(0x00), CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0x00), CUT(0xE0), CUT(0x00) } },
+        { {}, { CT{U'\U0000FEFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFE), CUT(0xFF) } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0x01), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0x00), CUT(0x10), CUT(0xFF), CUT(0xFF) } } };
     test_random_access_encoding<ET>(code_unit_maps);
 
     string encoded_string("\x00\x00\x00\x61\x00\x01\x11\x41\x00\x00\x00\x7A", 12);
@@ -1811,13 +1854,18 @@ void test_utf32le_encoding() {
     CUMS code_unit_maps_empty{};
     test_random_access_encoding<ET>(code_unit_maps_empty);
 
-    // Test a non-empty code unit sequence.
+    // Test well-formed code unit sequence boundaries.
     CUMS code_unit_maps{
-        { {}, { CT{U'\U00000041'} }, { CUT(0x41), CUT(0x00), CUT(0x00), CUT(0x00) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x41), CUT(0x01), CUT(0x00), CUT(0x00) } },
-        { {}, { CT{U'\U00001141'} }, { CUT(0x41), CUT(0x11), CUT(0x00), CUT(0x00) } },
-        { {}, { CT{U'\U00011141'} }, { CUT(0x41), CUT(0x11), CUT(0x01), CUT(0x00) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xFF), CUT(0xD7), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0xE0), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFF), CUT(0xFE), CUT(0x00), CUT(0x00) } }, // Not a BOM
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFD), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFE), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0x00), CUT(0x01), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xFF), CUT(0xFF), CUT(0x10), CUT(0x00) } } };
     test_random_access_encoding<ET>(code_unit_maps);
 
     string encoded_string("\x61\x00\x00\x00\x41\x11\x01\x00\x7A\x00\x00\x00", 12);
@@ -1864,21 +1912,31 @@ void test_utf32bom_encoding() {
     CUMS code_unit_maps_no_bom{
         { { STT::to_assume_bom_written_state() },
               {},                    {} },
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x00), CUT(0x00), CUT(0x01), CUT(0x41) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0x00), CUT(0x00), CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0x00), CUT(0xE0), CUT(0x00) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFE), CUT(0xFF) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0x00), CUT(0x01), CUT(0x11), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0x01), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0x00), CUT(0x10), CUT(0xFF), CUT(0xFF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_no_bom);
 
     // Test a code unit sequence containing a BE BOM.
     CUMS code_unit_maps_be_bom{
         { {}, {},                    { CUT(0x00), CUT(0x00), CUT(0xFE), CUT(0xFF) } }, // BE BOM
-        { {}, { CT{U'\U00000041'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x41) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x00), CUT(0x00), CUT(0x01), CUT(0x41) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x01) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0x00), CUT(0x00), CUT(0xD7), CUT(0xFF) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0x00), CUT(0xE0), CUT(0x00) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFE), CUT(0xFF) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0x00), CUT(0x01), CUT(0x11), CUT(0x41) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFD) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFE) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0x00), CUT(0x00), CUT(0xFF), CUT(0xFF) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0x01), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0x00), CUT(0x10), CUT(0xFF), CUT(0xFF) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_be_bom);
 
     // Test a code unit sequence containing a LE BOM.  This requires an explicit
@@ -1886,11 +1944,16 @@ void test_utf32bom_encoding() {
     CUMS code_unit_maps_le_bom{
         { { STT::to_le_bom_written_state() },
               {},                    { CUT(0xFF), CUT(0xFE), CUT(0x00), CUT(0x00) } }, // LE BOM
-        { {}, { CT{U'\U00000041'} }, { CUT(0x41), CUT(0x00), CUT(0x00), CUT(0x00) } },
-        { {}, { CT{U'\U00000141'} }, { CUT(0x41), CUT(0x01), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\0'}         }, { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00000001'} }, { CUT(0x01), CUT(0x00), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000D7FF'} }, { CUT(0xFF), CUT(0xD7), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000E000'} }, { CUT(0x00), CUT(0xE0), CUT(0x00), CUT(0x00) } },
         { {}, { CT{U'\U0000FEFF'} }, { CUT(0xFF), CUT(0xFE), CUT(0x00), CUT(0x00) } }, // Not a BOM
-        { {}, { CT{U'\U00011141'} }, { CUT(0x41), CUT(0x11), CUT(0x01), CUT(0x00) } },
-        { {}, { CT{U'\0'} },         { CUT(0x00), CUT(0x00), CUT(0x00), CUT(0x00) } } };
+        { {}, { CT{U'\U0000FFFD'} }, { CUT(0xFD), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000FFFE'} }, { CUT(0xFE), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U0000FFFF'} }, { CUT(0xFF), CUT(0xFF), CUT(0x00), CUT(0x00) } },
+        { {}, { CT{U'\U00010000'} }, { CUT(0x00), CUT(0x00), CUT(0x01), CUT(0x00) } },
+        { {}, { CT{U'\U0010FFFF'} }, { CUT(0xFF), CUT(0xFF), CUT(0x10), CUT(0x00) } } };
     test_bidirectional_encoding<ET>(code_unit_maps_le_bom);
 
     {
