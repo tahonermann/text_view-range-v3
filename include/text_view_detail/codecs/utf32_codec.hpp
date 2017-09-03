@@ -4,12 +4,11 @@
 // LICENSE.txt or http://www.opensource.org/licenses/mit-license.php for terms
 // and conditions.
 
-#if !defined(TEXT_VIEW_CODECS_UTF16BE_CODEC_HPP) // {
-#define TEXT_VIEW_CODECS_UTF16BE_CODEC_HPP
+#if !defined(TEXT_VIEW_CODECS_UTF32_CODEC_HPP) // {
+#define TEXT_VIEW_CODECS_UTF32_CODEC_HPP
 
 
 #include <climits>
-#include <cstdint>
 #include <text_view_detail/codecs/codec_util.hpp>
 #include <text_view_detail/concepts.hpp>
 #include <text_view_detail/error_status.hpp>
@@ -27,16 +26,16 @@ template<typename CT, typename CUT,
 CONCEPT_REQUIRES_(
     Character<CT>(),
     CodeUnit<CUT>())>
-class utf16be_codec {
+class utf32_codec {
 public:
     using state_type = trivial_encoding_state;
     using state_transition_type = trivial_encoding_state_transition;
     using character_type = CT;
     using code_unit_type = CUT;
-    static constexpr int min_code_units = 2;
-    static constexpr int max_code_units = 4;
+    static constexpr int min_code_units = 1;
+    static constexpr int max_code_units = 1;
 
-    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 8, "");
+    static_assert(sizeof(code_unit_type) * CHAR_BIT >= 32, "");
 
     template<typename CUIT,
     CONCEPT_REQUIRES_(CodeUnitOutputIterator<CUIT, code_unit_type>())>
@@ -67,35 +66,16 @@ public:
             code_point_type_t<character_set_type_t<character_type>>;
         code_point_type cp{c.get_code_point()};
 
-        if (cp >= 0xD800 && cp <= 0xDFFF) {
-            return encode_status::invalid_character;
-        }
-
-        if (cp <= 0xFFFF) {
-            code_unit_type octet1 = (cp >> 8) & 0xFF;
-            code_unit_type octet2 = cp & 0xFF;
-
-            *out++ = octet1;
+        if (cp <= 0xD7FF) {
+            *out++ = code_unit_type(cp);
             ++encoded_code_units;
-            *out++ = octet2;
+        } else if (cp <= 0xDFFF) {
+            return encode_status::invalid_character;
+        } else if (cp <= 0x0010FFFF) {
+            *out++ = code_unit_type(cp);
             ++encoded_code_units;
         } else {
-            uint_least16_t cu1 = 0xD800 + (((cp - 0x10000) >> 10) & 0x03FF);
-            uint_least16_t cu2 = 0xDC00 + ((cp - 0x10000) & 0x03FF);
-
-            code_unit_type octet1 = (cu1 >> 8) & 0xFF;
-            code_unit_type octet2 = cu1 & 0xFF;
-            code_unit_type octet3 = (cu2 >> 8) & 0xFF;
-            code_unit_type octet4 = cu2 & 0xFF;
-
-            *out++ = octet1;
-            ++encoded_code_units;
-            *out++ = octet2;
-            ++encoded_code_units;
-            *out++ = octet3;
-            ++encoded_code_units;
-            *out++ = octet4;
-            ++encoded_code_units;
+            return encode_status::invalid_character;
         }
 
         return encode_status::no_error;
@@ -119,39 +99,21 @@ public:
 
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
-        code_point_type cp;
 
         if (in_next == in_end)
             return decode_status::underflow;
-        code_unit_type octet1 = *in_next++;
-        ++decoded_code_units;
-        if (in_next == in_end)
-            return decode_status::underflow;
-        code_unit_type octet2 = *in_next++;
-        ++decoded_code_units;
-        uint_least16_t cu1 = ((octet1 & 0xFF) << 8) | (octet2 & 0xFF);
-        if (cu1 >= 0xD800 && cu1 <= 0xDBFF) {
-            if (in_next == in_end)
-                return decode_status::underflow;
-            code_unit_type octet3 = *in_next++;
-            ++decoded_code_units;
-            if (in_next == in_end)
-                return decode_status::underflow;
-            code_unit_type octet4 = *in_next++;
-            ++decoded_code_units;
-            uint_least16_t cu2 = ((octet3 & 0xFF) << 8) | (octet4 & 0xFF);
-            if (cu2 < 0xDC00 || cu2 > 0xDFFF) {
-                return decode_status::invalid_code_unit_sequence;
-            }
-            cp = 0x10000 + (((cu1 & 0x3FF) << 10) | (cu2 & 0x3FF));
-            c.set_code_point(cp);
-        } else if (cu1 >= 0xDC00 && cu1 <= 0xDFFF) {
+
+        code_unit_type cu = *in_next;
+        if ((cu >= 0x0000D800 && cu <= 0x0000DFFF) ||
+            cu > 0x0010FFFF)
+        {
+            skip_to_valid_code_unit(in_next, in_end, decoded_code_units);
             return decode_status::invalid_code_unit_sequence;
-        } else {
-            cp = cu1;
-            c.set_code_point(cp);
         }
-
+        ++in_next;
+        ++decoded_code_units;
+        code_point_type cp(cu);
+        c.set_code_point(cp);
         return decode_status::no_error;
     }
 
@@ -173,40 +135,43 @@ public:
 
         using code_point_type =
             code_point_type_t<character_set_type_t<character_type>>;
-        code_point_type cp;
 
         if (in_next == in_end)
             return decode_status::underflow;
-        code_unit_type roctet1 = *in_next++;
-        ++decoded_code_units;
-        if (in_next == in_end)
-            return decode_status::underflow;
-        code_unit_type roctet2 = *in_next++;
-        ++decoded_code_units;
-        uint_least16_t rcu1 = ((roctet2 & 0xFF) << 8) | (roctet1 & 0xFF);
-        if (rcu1 >= 0xDC00 && rcu1 <= 0xDFFF) {
-            if (in_next == in_end)
-                return decode_status::underflow;
-            code_unit_type roctet3 = *in_next++;
-            ++decoded_code_units;
-            if (in_next == in_end)
-                return decode_status::underflow;
-            code_unit_type roctet4 = *in_next++;
-            ++decoded_code_units;
-            uint_least16_t rcu2 = ((roctet4 & 0xFF) << 8) | (roctet3 & 0xFF);
-            if (rcu2 < 0xD800 || rcu2 > 0xDBFF) {
-                return decode_status::invalid_code_unit_sequence;
-            }
-            cp = 0x10000 + (((rcu2 & 0x3FF) << 10) | (rcu1 & 0x3FF));
-            c.set_code_point(cp);
-        } else if (rcu1 >= 0xD800 && rcu1 <= 0xDBFF) {
+        code_unit_type rcu = *in_next;
+        if ((rcu >= 0x0000D800 && rcu <= 0x0000DFFF) ||
+            rcu > 0x0010FFFF)
+        {
+            skip_to_valid_code_unit(in_next, in_end, decoded_code_units);
             return decode_status::invalid_code_unit_sequence;
-        } else {
-            cp = rcu1;
-            c.set_code_point(cp);
         }
-
+        ++in_next;
+        ++decoded_code_units;
+        code_point_type cp(rcu);
+        c.set_code_point(cp);
         return decode_status::no_error;
+    }
+
+private:
+    template<typename CUIT, typename CUST,
+    CONCEPT_REQUIRES_(
+        CodeUnitIterator<CUIT>(),
+        ranges::Sentinel<CUST, CUIT>())>
+    static void skip_to_valid_code_unit(
+        CUIT &in_next,
+        CUST in_end,
+        int &decoded_code_units)
+    noexcept(text_detail::NoExceptInputIterator<CUIT, CUST>())
+    {
+        while (in_next != in_end) {
+            code_unit_type cu = *in_next;
+            if (cu < 0x0000D800 || (cu >= 0x0000E000 && cu <= 0x0010FFFF)) {
+                // Found a valid code unit.
+                return;
+            }
+            ++in_next;
+            ++decoded_code_units;
+        }
     }
 };
 
@@ -217,4 +182,4 @@ public:
 } // namespace std
 
 
-#endif // } TEXT_VIEW_CODECS_UTF16BE_CODEC_HPP
+#endif // } TEXT_VIEW_CODECS_UTF32_CODEC_HPP
