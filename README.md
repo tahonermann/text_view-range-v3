@@ -4,6 +4,8 @@ Travis CI (Linux:gcc, Linux:clang, Mac OS X:clang)
 [![AppVeyor Build status](https://ci.appveyor.com/api/projects/status/qsfqip1v7632uvgt?svg=true)](https://ci.appveyor.com/project/tahonermann/text-view-range-v3)
 AppVeyor CI (Windows:Clang/C2)
 
+[![codecov](https://codecov.io/gh/tahonermann/text_view-range-v3/branch/master/graph/badge.svg)](https://codecov.io/gh/tahonermann/text_view-range-v3)
+
 [![Coverity Scan status](https://scan.coverity.com/projects/11588/badge.svg)](https://scan.coverity.com/projects/tahonermann-text_view-range-v3)
 
 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
