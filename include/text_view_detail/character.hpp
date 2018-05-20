@@ -48,6 +48,11 @@ public:
         return code_point;
     }
 
+    operator code_point_type() const noexcept {
+        return code_point;
+    }
+
+
     static character_set_id get_character_set_id() {
         return std::experimental::text::get_character_set_id<CST>();
     }
